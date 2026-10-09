@@ -17,6 +17,7 @@ describe("routeDecision", () => {
       "/login?next=%2Fonboarding%3Fstep%3D2",
     );
     expect(routeDecision({ pathname: "/reset-password", ...out })).toBe("/forgot-password");
+    expect(routeDecision({ pathname: "/alerts", ...out })).toBe("/login?next=%2Falerts");
   });
 
   it("sends signed-in users who haven't finished onboarding there", () => {

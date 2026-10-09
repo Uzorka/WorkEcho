@@ -11,7 +11,9 @@
 - [x] **Slice 3 — Salary and interview reports**: salary and interview tables with the same delay and
       privacy rules as reviews, aggregate-only salary ranges, interview summaries, company tabs, short
       forms reachable from the company page and the Create (+) button.
-- [ ] Slice 4 — Social feed, posts and replies
+- [x] **Slice 4 — Social feed, posts and replies**: posts, one-level replies, likes, reply
+      notifications; home feed (Latest / Top this week, category chips, cursor "Load more"), post
+      pages, composer with company search, company Discussions tab, /alerts with unread badge.
 - [ ] Slice 5 — Safety, moderation and admin
 - [ ] Slice 6 — Verified checkmark
 - [ ] Slice 7 — Polish, audit and launch
@@ -106,3 +108,33 @@
   moderation of reports is Slice 5.
 - Checks: lint, typecheck, build, unit tests (44), DB permission tests (65) and Playwright
   (46 tests at 360px mobile and desktop, two full runs) all pass.
+
+## Slice 4 notes
+
+- **Database** (`supabase/migrations/20261012120000_social_feed.sql`):
+  - `posts` (≤ 1,000 chars, optional active company, 8 categories), `replies` (≤ 500 chars, one level:
+    replies only point at posts), `post_likes` (primary key = one like per user per post),
+    `notifications` (`reply_to_your_post`, created by a trigger for the post's author only — not
+    for the replier, not for replying to your own post, and with no replier id stored).
+  - Publish instantly. Authors can edit (sets `edited_at`) and delete their own posts and replies;
+    nobody else can. Banned / not-onboarded users can't post, reply or like. Hidden posts can't get
+    replies or likes. `author_id`/`user_id` columns can't be selected by anyone in the browser.
+  - Public reads: `public_posts` / `public_replies` (pseudonym or "Deleted user", like and reply
+    counts, and per-viewer `is_mine` / `liked_by_me` computed from `auth.uid()`), and
+    `feed_posts()` with keyset pagination: Latest = (created_at, id); Top this week =
+    (like_count, created_at, id) over the last 7 days.
+- **UI:** `/` is the feed for everyone (logged-out visitors also see the intro); `/home` redirects
+  there. Post cards: generated initials avatar, time ago, category, company tag, "Show more" over
+  280 chars, like (instant, rolls back with a message on failure), reply count, share (copies the
+  link), Report (disabled, "soon" — Slice 5), edit/delete for your own posts. `/posts/[id]` has
+  replies (edit/delete your own) and a reply box. `/create` adds "Write a post". The Alerts nav
+  item shows an unread badge; `/alerts` now needs login.
+- **Added beyond the brief:** posts and replies reject phone numbers and email addresses (privacy
+  and content rules). "Top" pagination can't be perfectly stable while likes change, so the client
+  also drops any post it has already shown.
+- **Note:** the root layout now reads the session (for the unread badge), so every page renders
+  per request.
+- **Not done yet:** reporting (Slice 5); no notifications for likes; replies aren't paginated
+  (a post shows up to 200).
+- Checks: lint, typecheck, build, unit tests (53), DB permission tests (82) and Playwright
+  (52 tests at 360px mobile and desktop, two full runs) all pass.

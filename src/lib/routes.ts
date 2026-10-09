@@ -1,7 +1,7 @@
 // Which pages need an account, and where people get sent. Pure, so it's unit-tested.
 
 /** Pages that need a signed-in user. Everything else is public to browse. */
-const SIGNED_IN_ONLY = ["/onboarding", "/me", "/reset-password"];
+const SIGNED_IN_ONLY = ["/onboarding", "/me", "/reset-password", "/alerts"];
 
 /** Pages that make no sense once signed in. */
 const SIGNED_OUT_ONLY = ["/login", "/signup", "/forgot-password", "/check-email"];

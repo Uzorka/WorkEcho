@@ -1,19 +1,27 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { createPost } from "@/app/posts/actions";
+import { PostComposer } from "@/components/feed/PostComposer";
 import { buttonClass, inputClass } from "@/components/styles";
-import { getUser } from "@/lib/auth";
-import { listCompanies } from "@/lib/company-data";
+import { getUser, requireUser } from "@/lib/auth";
+import { getCompany, listCompanies } from "@/lib/company-data";
+import { POST_CATEGORIES } from "@/lib/posts";
 
 export const metadata: Metadata = { title: "Create" };
 
 const TYPES = {
+  post: { title: "Write a post", body: "Ask a question or start a discussion. Shown with your pseudonym.", path: "" },
   review: { title: "Review a company", body: "Rate a place you work or worked, and share pros and cons.", path: "review" },
   salary: { title: "Add a salary", body: "Your monthly pay, shown only as part of a range.", path: "salary" },
   interview: { title: "Share an interview", body: "What they asked and how it went. Job seekers welcome.", path: "interview" },
 } as const;
 type ShareType = keyof typeof TYPES;
 
-export default async function CreatePage({ searchParams }: { searchParams: Promise<{ type?: string; q?: string }> }) {
+export default async function CreatePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ type?: string; q?: string; company?: string; category?: string }>;
+}) {
   const sp = await searchParams;
   const type = (Object.keys(TYPES) as ShareType[]).find((t) => t === sp.type);
   const q = (sp.q ?? "").trim().slice(0, 100);
@@ -48,11 +56,22 @@ export default async function CreatePage({ searchParams }: { searchParams: Promi
               </Link>
             </li>
           ))}
-          <li className="flex flex-col gap-1 rounded-2xl border border-dashed border-border p-4">
-            <span className="text-lg font-semibold text-muted">Start a discussion</span>
-            <span className="text-sm text-muted">Coming soon, in Slice 4.</span>
-          </li>
         </ul>
+      </section>
+    );
+  }
+
+  if (type === "post") {
+    await requireUser("/create?type=post");
+    const company = sp.company ? await getCompany(sp.company) : null;
+    const category = sp.category && sp.category in POST_CATEGORIES ? sp.category : undefined;
+    return (
+      <section className="mx-auto flex w-full max-w-xl flex-col gap-5">
+        <Link href="/create" className="-my-2 self-start py-2 text-sm font-medium text-primary underline">
+          ← Back
+        </Link>
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Write a post</h1>
+        <PostComposer action={createPost} initial={{ category, company: company ? { id: company.id, name: company.name, slug: company.slug } : null }} />
       </section>
     );
   }
@@ -85,7 +104,7 @@ export default async function CreatePage({ searchParams }: { searchParams: Promi
             {companies.map((c) => (
               <li key={c.company_id}>
                 <Link
-                  href={`/companies/${c.slug}/${TYPES[type].path}`}
+                  href={`/companies/${c.slug}/${TYPES[type as Exclude<ShareType, "post">].path}`}
                   prefetch={false}
                   className="flex min-h-11 flex-col rounded-2xl border border-border bg-card p-4 hover:border-primary"
                 >

@@ -117,3 +117,42 @@ select c.id, ('00000000-0000-4000-8000-00000000000' || v.n)::uuid, v.rg::public.
      '(Demo) Walk us through a bank reconciliation. Case study on loan provisioning.', null, 'positive')
   ) as v(n, rg, outcome, diff, weeks, stages, questions, tips, exp) on true
  where c.slug = 'demo-harbour-bank';
+
+-- ---------------------------------------------------------------- demo posts, replies, likes
+-- 14 posts (more than one page of 10), spread over the last few days.
+
+insert into public.posts (id, author_id, company_id, category, body, created_at)
+select ('10000000-0000-4000-8000-0000000000' || lpad(v.n::text, 2, '0'))::uuid,
+       ('00000000-0000-4000-8000-00000000000' || (1 + v.n % 5))::uuid,
+       (select id from public.companies where slug = v.company),
+       v.category::public.post_category, v.body,
+       now() - (v.n * 5 || ' hours')::interval
+  from (values
+    (1, 'demo-harbour-bank', 'salary_benefits', '(Demo post) Does anyone know if Demo Harbour Bank pays the 13th month in December or January?'),
+    (2, null, 'career_advice', '(Demo post) Moving from customer service into product. Which short courses actually helped you?'),
+    (3, null, 'work_life_balance', '(Demo post) How do you handle bosses who send messages at 11pm and expect a reply?'),
+    (4, 'demo-kola-pay', 'workplace_culture', '(Demo post) Startup culture in Yaba: free lunch is nice, but is it worth the weekend work?'),
+    (5, null, 'job_offers', '(Demo post) Got two offers: one pays more, the other has HMO and pension. Which would you pick?'),
+    (6, null, 'interview_experiences', '(Demo post) Tip: practise aptitude tests with a timer. The real ones are much faster than you expect.'),
+    (7, null, 'management', '(Demo post) What makes a good first-time manager? Mine is trying hard but struggles to say no.'),
+    (8, 'demo-weaver-software', 'general', '(Demo post) Anyone else working remotely from Enugu? Light has been better this month.'),
+    (9, null, 'salary_benefits', '(Demo post) Is ₦250,000 a fair starting salary for a junior accountant in Lagos in 2026?'),
+    (10, null, 'career_advice', '(Demo post) Should I do my MSc now or get two more years of experience first?'),
+    (11, null, 'workplace_culture', '(Demo post) Our office started Friday casual dress and honestly morale went up.'),
+    (12, null, 'general', '(Demo post) What do you wish you had asked before accepting your first job offer?'),
+    (13, null, 'job_offers', '(Demo post) The offer letter says "salary is confidential". Is that normal?'),
+    (14, null, 'interview_experiences', '(Demo post) Waited three hours at reception for a 15-minute interview. Is that normal now?')
+  ) as v(n, company, category, body);
+
+insert into public.replies (post_id, author_id, body, created_at)
+values
+  ('10000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000003', '(Demo reply) It came with the December salary when I was there.', now() - interval '4 hours'),
+  ('10000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000004', '(Demo reply) Same here, but only for confirmed staff.', now() - interval '3 hours'),
+  ('10000000-0000-4000-8000-000000000005', '00000000-0000-4000-8000-000000000002', '(Demo reply) HMO and pension add up. I would pick that one.', now() - interval '20 hours');
+
+-- Notifications for those replies were created by the trigger; mark them read.
+update public.notifications set is_read = true;
+
+insert into public.post_likes (post_id, user_id)
+select ('10000000-0000-4000-8000-0000000000' || lpad(p::text, 2, '0'))::uuid, ('00000000-0000-4000-8000-00000000000' || u)::uuid
+  from (values (1, 2), (1, 3), (1, 4), (5, 1), (5, 2), (9, 3)) as l(p, u);

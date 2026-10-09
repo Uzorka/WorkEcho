@@ -32,7 +32,7 @@ test("company tabs: salaries, interviews and discussions", async ({ page }) => {
   await expect(page.getByText("DemoReviewer", { exact: false })).toHaveCount(0);
 
   await tabs.getByRole("link", { name: "Discussions" }).click();
-  await expect(page.getByText(/Discussions aren.t ready yet/)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Start a discussion" })).toBeVisible();
 
   // A company without enough data shows friendly empty states.
   await page.goto("/companies/demo-kola-pay/salaries");
