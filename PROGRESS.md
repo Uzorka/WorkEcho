@@ -17,7 +17,9 @@
 - [x] **Slice 5 — Safety, moderation and admin**: privacy warnings + server-side contact-detail
       blocking, reports with auto-hide, rate limits, bans, /admin (reports, requests, companies, users,
       action log), draft guidelines / privacy / terms.
-- [ ] Slice 6 — Verified checkmark
+- [x] **Slice 6 — Verified checkmark**: work-email verification (code via Resend, email never stored),
+      private verifications, checkmark on profile/posts/replies, verified reviews/reports, weighted
+      ratings, verified-first lists, feed boost, double rate limits, admin revoke only, /verification.
 - [ ] Slice 7 — Polish, audit and launch
 
 ## Slice 0 notes
@@ -174,3 +176,33 @@
   (only hide/remove/restore); no email notifications to banned users.
 - Checks: lint, typecheck, build, unit tests (59), DB permission tests (121) and Playwright
   (62 tests at 360px mobile and desktop, two full runs) all pass.
+
+## Slice 6 notes
+
+- **Rule 10 is enforced by the database** (`supabase/migrations/20261014120000_verification.sql`):
+  `confirm_company_verification()` is the only code that creates or renews a verification, and only
+  after the right code. Users and admins can't write `verifications`; `create_verification_challenge()`
+  is callable only by the server (service role). Admins have `admin_revoke_verification()` and no
+  grant function. A DB test scans every function to prove this. Banning revokes automatically.
+- **The work email is never stored.** The server checks its domain, sends the code (Resend; Mailpit
+  locally) and drops it. The DB gets only the domain (to re-check it) and a bcrypt hash of the code,
+  with a 15-minute expiry and an attempt counter (max 5). 3 codes per account per day. The e2e test
+  greps a full database dump, every Supabase container log and the app server log for the address.
+- `verifications`: 12 months, status active / expired / revoked. Renewal opens 30 days before expiry
+  (reminder on /me). Expired rows lose the checkmark immediately (views check `expires_at`).
+- **Checkmark:** `public_profiles.is_verified`, `public_posts.author_is_verified`,
+  `public_replies.author_is_verified` — booleans only, never the company.
+- **Verified content:** `is_verified` on reviews, salary and interview reports is set by a trigger
+  (users can't set it). Verifying marks earlier content for that company too. Revoking unmarks it.
+  Expiry keeps it (it was verified when written).
+- **Counts more:** ratings and Nigeria percentages weight verified reviews 2, others 1; thresholds use
+  plain counts. Lists show verified first, then the chosen sort; reviews have a "Verified only"
+  filter. Salary ranges show the verified count. "Top this week" uses `rank_score` = likes + 1 for
+  verified authors. Verified users get double rate limits.
+- **One work email can verify more than one account** (we keep nothing derived from it, by design).
+- **Production needs:** run `workecho-slice6-database.sql` in the SQL editor, then set
+  `RESEND_API_KEY` and `EMAIL_FROM_ADDRESS` in Vercel. Resend only delivers to other people once you
+  verify your own sending domain with them (`*.vercel.app` can't be verified). Admins must add each
+  company's work-email domains (Admin → Companies) before anyone can verify there.
+- Checks: lint, typecheck, build, unit tests (69), DB permission tests (145) and Playwright
+  (66 tests at 360px mobile and desktop, two full runs) all pass.

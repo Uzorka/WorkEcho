@@ -220,7 +220,7 @@ describe("cursor pagination", () => {
   });
 
   async function pageAll(sort: "latest" | "top", limit: number) {
-    type Row = { created_at: string; id: string; like_count: number };
+    type Row = { created_at: string; id: string; like_count: number; rank_score: number };
     const seen: Row[] = [];
     for (let guard = 0; guard < 20; guard++) {
       const cursor: Row | undefined = seen[seen.length - 1];
@@ -229,7 +229,7 @@ describe("cursor pagination", () => {
         p_company_id: co.id,
         p_after_created: cursor?.created_at ?? null,
         p_after_id: cursor?.id ?? null,
-        p_after_likes: sort === "top" ? (cursor?.like_count ?? null) : null,
+        p_after_score: sort === "top" ? (cursor?.rank_score ?? null) : null,
         p_limit: limit,
       });
       if (error) throw error;

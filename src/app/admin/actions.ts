@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/admin";
 import { INDUSTRIES, SIZE_RANGES } from "@/lib/companies";
 import { NIGERIAN_STATES } from "@/lib/nigeria";
 import { REPORT_CONTENT_TYPES } from "@/lib/report-reasons";
+import { parseEmailDomains } from "@/lib/verification";
 
 // Admin actions. Each one checks admin status here AND in the database
 // function it calls (which also writes the admin_actions log).
@@ -99,6 +100,8 @@ export async function updateCompany(companyId: string, _prev: AdminResult | null
   const parsed = companyFields(fd);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const status = fd.get("status") === "pending" ? "pending" : "active";
+  const domains = parseEmailDomains(String(fd.get("email_domains") ?? ""));
+  if ("error" in domains) return fail(domains.error);
   const c = parsed.data;
   const { error } = await supabase.rpc("admin_update_company", {
     p_id: companyId,
@@ -110,6 +113,7 @@ export async function updateCompany(companyId: string, _prev: AdminResult | null
     p_size_range: c.size_range,
     p_description: c.description,
     p_status: status,
+    p_email_domains: domains.domains,
     p_note: note(fd),
   });
   if (error) return fail();
@@ -136,3 +140,12 @@ export async function revealBannedEmail(userId: string): Promise<AdminResult> {
   return { ok: true, message: data as string };
 }
 
+
+/** Revoke a checkmark. (There is deliberately no action to grant one.) Logged by the database. */
+export async function revokeVerification(verificationId: string, _prev: AdminResult | null, fd: FormData): Promise<AdminResult> {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc("admin_revoke_verification", { p_id: verificationId, p_note: note(fd) });
+  if (error) return fail(error.code === "P0002" ? "Already revoked." : undefined);
+  revalidatePath("/", "layout");
+  return { ok: true, message: "Checkmark revoked." };
+}

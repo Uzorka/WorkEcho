@@ -7,7 +7,7 @@ const id = "10000000-0000-4000-8000-000000000001";
 
 describe("feed cursor", () => {
   it("round-trips for latest and top", () => {
-    const post = { id, created_at: "2026-10-09T10:00:00.000Z", like_count: 4 };
+    const post = { id, created_at: "2026-10-09T10:00:00.000Z", rank_score: 4 };
     expect(decodeCursor(encodeCursor(post, "latest"), "latest")).toEqual({ c: post.created_at, i: id });
     expect(decodeCursor(encodeCursor(post, "top"), "top")).toEqual({ c: post.created_at, i: id, l: 4 });
   });
@@ -16,7 +16,7 @@ describe("feed cursor", () => {
     expect(decodeCursor(Buffer.from(JSON.stringify({ c: "yesterday", i: id })).toString("base64url"), "latest")).toBeNull();
     expect(decodeCursor(Buffer.from(JSON.stringify({ c: "2026-10-09T10:00:00Z", i: "1; drop table" })).toString("base64url"), "latest")).toBeNull();
     // A latest cursor has no like count, so it's not valid for top.
-    expect(decodeCursor(encodeCursor({ id, created_at: "2026-10-09T10:00:00Z", like_count: 1 }, "latest"), "top")).toBeNull();
+    expect(decodeCursor(encodeCursor({ id, created_at: "2026-10-09T10:00:00Z", rank_score: 1 }, "latest"), "top")).toBeNull();
     expect(decodeCursor(42, "latest")).toBeNull();
   });
 });

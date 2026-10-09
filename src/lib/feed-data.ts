@@ -19,7 +19,7 @@ export async function getFeed({ sort, category, companyId, cursor }: FeedQuery) 
     p_company_id: companyId ?? null,
     p_after_created: after?.c ?? null,
     p_after_id: after?.i ?? null,
-    p_after_likes: after?.l ?? null,
+    p_after_score: after?.l ?? null,
     p_limit: FEED_PAGE_SIZE + 1,
   });
   if (error) throw new Error("Could not load posts");

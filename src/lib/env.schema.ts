@@ -15,6 +15,13 @@ export const serverEnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z
     .string({ message: "SUPABASE_SERVICE_ROLE_KEY is required" })
     .min(20, { message: "SUPABASE_SERVICE_ROLE_KEY looks missing or too short" }),
+  // Work-email verification codes (Slice 6). Without RESEND_API_KEY the
+  // feature shows "not switched on yet" instead of pretending to send.
+  RESEND_API_KEY: z.string().min(10).optional(),
+  // Must be an address on a domain you've verified in Resend.
+  EMAIL_FROM_ADDRESS: z.email().optional(),
+  // Local development only: send through Supabase's Mailpit inbox instead.
+  MAILPIT_URL: z.url().optional(),
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;

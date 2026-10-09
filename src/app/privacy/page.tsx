@@ -59,6 +59,14 @@ export default function PrivacyPage() {
         look is logged.
       </p>
 
+      <h2>Verification (optional)</h2>
+      <p>
+        If you choose to verify with your work email, we use that email once to send you a code and never save it. We store only a scrambled
+        (hashed) copy of the code, when it expires and how many wrong tries were made, and — once you pass — that your account is verified
+        with that company, when, and until when. Only you can see which company. Your company&apos;s email system may record that we emailed
+        you. <Link href="/verification">How checkmarks work</Link>.
+      </p>
+
       <h2>Why we use it (lawful basis)</h2>
       <ul>
         <li>

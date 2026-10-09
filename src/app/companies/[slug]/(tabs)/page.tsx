@@ -78,6 +78,15 @@ export default async function CompanyOverviewPage({ params }: Props) {
             {myInterview ? "Edit your interview" : "Share an interview"}
           </Link>
         </div>
+        {company.email_domains.length > 0 && (
+          <p className="text-sm text-muted">
+            Work here?{" "}
+            <Link href={`/me/verify?company=${slug}`} className="font-medium text-primary underline">
+              Get verified with your work email
+            </Link>{" "}
+            — your reviews count double.
+          </p>
+        )}
       </div>
 
       {/* Ratings */}
@@ -88,10 +97,11 @@ export default async function CompanyOverviewPage({ params }: Props) {
             <div className="flex flex-col gap-1">
               <Stars value={stats.avg_overall} size="lg" />
               <p className="text-sm text-muted">
-                Overall, from{" "}
+                Based on{" "}
                 <Link href={`${base}/reviews`} className="underline">
                   {count} {count === 1 ? "review" : "reviews"}
-                </Link>
+                </Link>{" "}
+                ({stats.verified_review_count} verified). Verified reviews count double.
               </p>
             </div>
             <dl className="flex flex-col gap-2">

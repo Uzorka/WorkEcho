@@ -41,12 +41,12 @@ describe("anonymous visitor", () => {
     expect((await anon.from("profiles").delete().eq("id", a.id)).error?.code).toBe(PERMISSION_DENIED);
   });
 
-  it("can read pseudonyms (and only pseudonyms) from public_profiles", async () => {
+  it("can read pseudonyms (and only pseudonym + checkmark) from public_profiles", async () => {
     const { data, error } = await anonClient().from("public_profiles").select("*");
     expect(error).toBeNull();
     const pseudonymA = (await row(a.id))!.pseudonym;
     expect(data!.map((r) => r.pseudonym)).toContain(pseudonymA);
-    for (const r of data!) expect(Object.keys(r)).toEqual(["pseudonym"]);
+    for (const r of data!) expect(Object.keys(r).sort()).toEqual(["is_verified", "pseudonym"]);
   });
 
   it("cannot call complete_onboarding", async () => {

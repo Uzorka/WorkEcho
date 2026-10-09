@@ -10,6 +10,7 @@ import {
 } from "@/lib/companies";
 import { stateLabel } from "@/lib/nigeria";
 import { Stars } from "./Stars";
+import { CheckIcon } from "./CheckIcon";
 
 // One review as readers see it. NO pseudonym: only status, department, type,
 // state and quarter. Pure component, also used for the preview in the form.
@@ -32,6 +33,7 @@ export type ReviewCardData = {
   cons: string;
   advice_to_management: string | null;
   published_quarter: string;
+  is_verified?: boolean;
 };
 
 export function reviewMeta(r: Pick<ReviewCardData, "employment_status" | "department" | "employment_type" | "state" | "published_quarter">) {
@@ -51,6 +53,7 @@ export function ReviewCard({ review, footer, as: Heading = "h3" }: { review: Rev
       <div className="flex flex-col gap-1">
         <Stars value={review.rating_overall} />
         <Heading className="text-lg font-semibold break-words">{review.headline}</Heading>
+        {review.is_verified && <VerifiedLabel former={review.employment_status === "former"} />}
         <p className="text-sm text-muted">{reviewMeta(review).join(" · ")}</p>
       </div>
       <div>
@@ -91,5 +94,15 @@ export function ReviewCard({ review, footer, as: Heading = "h3" }: { review: Rev
       )}
       {footer}
     </article>
+  );
+}
+
+/** "✓ Verified employee" on reviews and reports written by someone verified at that company. */
+export function VerifiedLabel({ former = false }: { former?: boolean }) {
+  return (
+    <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
+      <CheckIcon size={16} />
+      {former ? "Verified former employee" : "Verified employee"}
+    </p>
   );
 }

@@ -34,6 +34,19 @@ export default async function AdminEditCompanyPage({ params }: { params: Promise
       <AdminForm action={updateCompany.bind(null, id)} noteLabel="Note for the log">
         <div className="flex w-full flex-col gap-3">
           <CompanyFields idPrefix="edit" values={company} />
+          <label className="flex flex-col gap-1 text-sm font-medium" htmlFor="edit-email-domains">
+            Work email domains (for verification)
+            <input
+              id="edit-email-domains"
+              name="email_domains"
+              defaultValue={((company.email_domains as unknown as string[] | null) ?? []).join(", ")}
+              placeholder="e.g. chfheron.com, chf.ng"
+              className={inputClass}
+            />
+            <span className="font-normal text-muted">
+              Staff with an email at these domains (or their subdomains) can verify. Separate with commas. Free providers like gmail.com aren&apos;t allowed.
+            </span>
+          </label>
           <label className="flex flex-col gap-1 text-sm font-medium" htmlFor="edit-status">
             Status
             <select id="edit-status" name="status" defaultValue={company.status ?? "active"} className={`${inputClass} max-w-xs`}>

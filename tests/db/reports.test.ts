@@ -103,6 +103,7 @@ describe("salary thresholds and rounding", () => {
         median_naira: 150_000, // 154,999
         lowest_naira: 100_000, // 101,000
         highest_naira: 270_000, // 265,000 (halves round up)
+        verified_count: 0,
       },
     ]);
   });
@@ -168,7 +169,7 @@ describe("salary privacy and permissions", () => {
     const { data } = await anonClient().from("company_salary_stats").select("*").limit(5);
     for (const row of data ?? [])
       expect(Object.keys(row).sort()).toEqual(
-        ["company_id", "highest_naira", "level", "lowest_naira", "median_naira", "report_count", "role_group"].sort(),
+        ["company_id", "highest_naira", "level", "lowest_naira", "median_naira", "report_count", "role_group", "verified_count"].sort(),
       );
     expect((await anonClient().from("company_salary_stats").select("author_id")).error).not.toBeNull();
     expect((await anonClient().from("company_salary_stats").select("monthly_gross_naira")).error).not.toBeNull();

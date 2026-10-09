@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Notice } from "@/components/Notice";
 import { ReportButton } from "@/components/ReportButton";
+import { VerifiedLabel } from "@/components/ReviewCard";
 import { buttonClass, secondaryButtonClass } from "@/components/styles";
 import { getUser } from "@/lib/auth";
 import { INTERVIEWS_PER_PAGE, getCompany, getInterviewStats, getInterviews, getMyInterview } from "@/lib/company-data";
@@ -86,6 +87,7 @@ export default async function CompanyInterviewsPage({ params, searchParams }: Pr
                   <h3 className="font-semibold">
                     {isKey(DEPARTMENTS, r.role_group) ? DEPARTMENTS[r.role_group] : r.role_group} interview
                   </h3>
+                  {r.is_verified && <VerifiedLabel />}
                   <p className="text-sm text-muted">
                     {[
                       isKey(INTERVIEW_OUTCOMES, r.outcome) ? INTERVIEW_OUTCOMES[r.outcome] : r.outcome,

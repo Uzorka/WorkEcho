@@ -35,6 +35,7 @@ export type CompanyStats = {
   pension_remitted_yes_pct: number | null;
   got_contract_answers: number;
   got_contract_yes_pct: number | null;
+  verified_review_count: number;
 };
 
 export type Company = {
@@ -47,6 +48,7 @@ export type Company = {
   website: string | null;
   size_range: string | null;
   description: string | null;
+  email_domains: string[];
 };
 
 export type PublicReview = {
@@ -74,6 +76,7 @@ export type PublicReview = {
   advice_to_management: string | null;
   published_quarter: string;
   helpful_count: number;
+  is_verified: boolean;
 };
 
 export async function listCompanies({
@@ -110,7 +113,7 @@ export const getCompany = cache(async (slug: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("companies")
-    .select("id, name, slug, industry, state, city, website, size_range, description")
+    .select("id, name, slug, industry, state, city, website, size_range, description, email_domains")
     .eq("slug", slug)
     .maybeSingle();
   return data as Company | null;
@@ -132,13 +135,15 @@ export async function getDepartmentStats(companyId: string) {
   return (data ?? []) as { department: string; review_count: number; avg_overall: number }[];
 }
 
-export async function getReviews(companyId: string, sort: ReviewSort, page: number) {
+/** Verified reviews come first (then the chosen sort); optionally verified only. */
+export async function getReviews(companyId: string, sort: ReviewSort, page: number, verifiedOnly = false) {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("company_reviews", {
     p_company_id: companyId,
     p_sort: sort,
     p_limit: REVIEWS_PER_PAGE,
     p_offset: (page - 1) * REVIEWS_PER_PAGE,
+    p_verified_only: verifiedOnly,
   });
   if (error) throw new Error("Could not load reviews");
   return (data ?? []) as PublicReview[];
@@ -147,7 +152,7 @@ export async function getReviews(companyId: string, sort: ReviewSort, page: numb
 export const MY_REVIEW_COLUMNS =
   "id, employment_status, department, employment_type, state, rating_overall, rating_pay, rating_work_life, rating_management, rating_culture, rating_growth, salary_on_time, overtime_paid, has_hmo, pension_remitted, got_contract, probation_months, confirmed_after_probation, headline, pros, cons, advice_to_management, status";
 
-export type MyReview = Omit<PublicReview, "published_quarter" | "helpful_count"> & { status: string };
+export type MyReview = Omit<PublicReview, "published_quarter" | "helpful_count" | "is_verified"> & { status: string };
 
 /** The signed-in user's own review of a company (RLS: own rows only). */
 export async function getMyReview(companyId: string) {
@@ -175,6 +180,7 @@ export type SalaryGroup = {
   median_naira: number;
   lowest_naira: number;
   highest_naira: number;
+  verified_count: number;
 };
 
 /** Salary ranges for groups with >= 3 reports. Individual salaries are never readable. */
@@ -182,7 +188,7 @@ export async function getSalaryStats(companyId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("company_salary_stats")
-    .select("role_group, level, report_count, median_naira, lowest_naira, highest_naira")
+    .select("role_group, level, report_count, median_naira, lowest_naira, highest_naira, verified_count")
     .eq("company_id", companyId)
     .order("role_group")
     .order("level");
@@ -210,6 +216,7 @@ export type PublicInterview = {
   tips: string | null;
   experience: string;
   published_quarter: string;
+  is_verified: boolean;
 };
 
 /** Visible counts per section, for the tab labels. */
@@ -267,7 +274,7 @@ export async function getMySalary(companyId: string) {
   return data as MySalary | null;
 }
 
-export type MyInterview = Omit<PublicInterview, "published_quarter"> & { status: string };
+export type MyInterview = Omit<PublicInterview, "published_quarter" | "is_verified"> & { status: string };
 
 export async function getMyInterview(companyId: string) {
   const supabase = await createClient();

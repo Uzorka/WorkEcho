@@ -6,12 +6,12 @@ import { ReportButton } from "@/components/ReportButton";
 import { ReviewCard } from "@/components/ReviewCard";
 import { buttonClass, secondaryButtonClass } from "@/components/styles";
 import { getUser } from "@/lib/auth";
-import { REVIEWS_PER_PAGE, getCompany, getCompanyCounts, getMyReview, getMyVotes, getReviews } from "@/lib/company-data";
+import { REVIEWS_PER_PAGE, getCompany, getCompanyStats, getMyReview, getMyVotes, getReviews } from "@/lib/company-data";
 import { REVIEW_SORTS, isKey } from "@/lib/companies";
 import { toggleHelpful } from "../../../actions";
 import { ClearReviewDraft } from "./ClearReviewDraft";
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ sort?: string; page?: string; notice?: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ sort?: string; page?: string; notice?: string; verified?: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const company = await getCompany((await params).slug);
@@ -34,19 +34,24 @@ export default async function CompanyReviewsPage({ params, searchParams }: Props
   const sort = isKey(REVIEW_SORTS, sp.sort) ? sp.sort : "newest";
   const page = Math.max(1, Math.floor(Number(sp.page) || 1));
 
-  const [counts, reviews, user] = await Promise.all([getCompanyCounts(company.id), getReviews(company.id, sort, page), getUser()]);
+  const verifiedOnly = sp.verified === "1";
+  const [stats, reviews, user] = await Promise.all([getCompanyStats(company.id), getReviews(company.id, sort, page, verifiedOnly), getUser()]);
   const [myReview, myVotes] = user
     ? await Promise.all([getMyReview(company.id), getMyVotes(reviews.map((r) => r.id))])
     : [null, new Set<string>()];
 
-  const count = counts.reviews;
-  const sortHref = (s: string) => `/companies/${slug}/reviews${s === "newest" ? "" : `?sort=${s}`}`;
-  const pageHref = (p: number) => {
+  const count = stats?.review_count ?? 0;
+  const verifiedCount = stats?.verified_review_count ?? 0;
+  const href = ({ s = sort, v = verifiedOnly, p = 1 }: { s?: string; v?: boolean; p?: number }) => {
     const q = new URLSearchParams();
-    if (sort !== "newest") q.set("sort", sort);
+    if (s !== "newest") q.set("sort", s);
+    if (v) q.set("verified", "1");
     if (p > 1) q.set("page", String(p));
     return `/companies/${slug}/reviews${q.size ? `?${q}` : ""}`;
   };
+  const sortHref = (s: string) => href({ s });
+  const pageHref = (p: number) => href({ p });
+  const shownTotal = verifiedOnly ? verifiedCount : count;
 
   return (
     <div className="flex flex-col gap-4">
@@ -58,6 +63,22 @@ export default async function CompanyReviewsPage({ params, searchParams }: Props
 
       <div className="flex flex-col gap-3">
         <h2 className="sr-only">Reviews</h2>
+        {count > 0 && (
+          <p className="text-sm text-muted">
+            {count} {count === 1 ? "review" : "reviews"} ({verifiedCount} verified). Verified reviews show first.
+          </p>
+        )}
+        {count > 0 && (
+          <Link
+            href={href({ v: !verifiedOnly })}
+            aria-pressed={verifiedOnly}
+            className={`inline-flex min-h-11 items-center self-start rounded-full border px-4 text-sm font-medium ${
+              verifiedOnly ? "border-primary bg-primary-soft text-primary" : "border-border hover:bg-primary-soft"
+            }`}
+          >
+            ✓ Verified only
+          </Link>
+        )}
         {count > 0 && (
           <nav aria-label="Sort reviews" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
             {Object.entries(REVIEW_SORTS).map(([key, label]) => (
@@ -77,7 +98,7 @@ export default async function CompanyReviewsPage({ params, searchParams }: Props
 
         {reviews.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-5">
-            <p className="font-medium">{page > 1 ? "No more reviews." : "No reviews yet."}</p>
+            <p className="font-medium">{page > 1 ? "No more reviews." : verifiedOnly ? "No verified reviews yet." : "No reviews yet."}</p>
             <p className="mt-1 text-sm text-muted">
               Worked here? Your review helps job seekers decide. New reviews appear within 72 hours.
             </p>
@@ -134,7 +155,7 @@ export default async function CompanyReviewsPage({ params, searchParams }: Props
             ) : (
               <span />
             )}
-            {reviews.length === REVIEWS_PER_PAGE && page * REVIEWS_PER_PAGE < count ? (
+            {reviews.length === REVIEWS_PER_PAGE && page * REVIEWS_PER_PAGE < shownTotal ? (
               <Link href={pageHref(page + 1)} className={secondaryButtonClass}>
                 Next →
               </Link>

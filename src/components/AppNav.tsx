@@ -55,6 +55,7 @@ export function Sidebar({ unread = 0 }: { unread?: number }) {
           <Link href="/guidelines" className="py-2 hover:text-text">Guidelines</Link>
           <Link href="/privacy" className="py-2 hover:text-text">Privacy</Link>
           <Link href="/terms" className="py-2 hover:text-text">Terms</Link>
+          <Link href="/verification" className="py-2 hover:text-text">Checkmarks</Link>
         </div>
       </div>
     </aside>

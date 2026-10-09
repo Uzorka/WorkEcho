@@ -81,7 +81,10 @@ export default async function CompanySalariesPage({ params, searchParams }: Prop
                     <td className="px-4 py-3 whitespace-nowrap">
                       {formatNaira(g.lowest_naira)} – {formatNaira(g.highest_naira)}
                     </td>
-                    <td className="px-4 py-3 text-right">{g.report_count}</td>
+                    <td className="px-4 py-3 text-right">
+                      {g.report_count}
+                      {g.verified_count > 0 && <span className="block text-xs text-primary">✓ {g.verified_count} verified</span>}
+                    </td>
                     <td className="px-2 py-1">
                       <ReportButton
                         type="salary_group"

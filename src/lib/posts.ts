@@ -35,6 +35,10 @@ export type PublicPost = {
   reply_count: number;
   is_mine: boolean;
   liked_by_me: boolean;
+  /** Author has an active checkmark (never says which company). */
+  author_is_verified: boolean;
+  /** "Top this week" score: likes + 1 for verified authors. */
+  rank_score: number;
 };
 
 export type PublicReply = {
@@ -45,6 +49,7 @@ export type PublicReply = {
   edited_at: string | null;
   author_pseudonym: string;
   is_mine: boolean;
+  author_is_verified: boolean;
 };
 
 // ---------------------------------------------------------------- avatar

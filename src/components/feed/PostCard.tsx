@@ -7,6 +7,7 @@ import { POST_CATEGORIES, POST_PREVIEW_CHARS, type PublicPost } from "@/lib/post
 import { Avatar } from "./Avatar";
 import { LikeButton } from "./LikeButton";
 import { ReportButton } from "@/components/ReportButton";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { OwnPostActions, ShareButton } from "./PostActions";
 import { TimeAgo } from "./TimeAgo";
 
@@ -38,6 +39,11 @@ export function PostCard({
         <div className="flex min-w-0 flex-col">
           <span id={`post-${post.id}-author`} className="font-semibold break-all">
             {post.author_pseudonym}
+            {post.author_is_verified && (
+              <span className="ml-1">
+                <VerifiedBadge />
+              </span>
+            )}
             {post.is_mine && <span className="ml-1 text-xs font-normal text-muted">(you)</span>}
           </span>
           <span className="flex flex-wrap items-center gap-x-1.5 text-sm text-muted">

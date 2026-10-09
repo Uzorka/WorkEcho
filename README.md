@@ -59,6 +59,12 @@ Database changes go in `supabase/migrations/` as migration files. Dev-only
 fictional seed data goes in `supabase/seed.sql` (20 "Demo …" companies and a few demo reviews).
 Run `npm run db:reset` to apply both locally. The end-to-end tests expect the seed data.
 
+### Verification emails (Slice 6)
+
+Work-email codes are sent with [Resend](https://resend.com). Set `RESEND_API_KEY` and
+`EMAIL_FROM_ADDRESS` (an address on a domain you've verified in Resend) in Vercel. Locally, add
+`MAILPIT_URL=http://127.0.0.1:54324` to `.env.local` and codes land in Mailpit instead.
+
 ### Admins
 
 Admin rights can only be granted in the database. In the Supabase SQL editor:

@@ -7,6 +7,7 @@ import { TimeAgo } from "@/components/feed/TimeAgo";
 import { SubmitButton } from "@/components/forms";
 import { ReportButton } from "@/components/ReportButton";
 import { SensitiveWarning } from "@/components/SensitiveWarning";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { buttonClass, inputClass, secondaryButtonClass } from "@/components/styles";
 import { REPLY_MAX, type PublicReply } from "@/lib/posts";
 import { createReply, deleteReply, updateReply, type PostFormState } from "../actions";
@@ -111,6 +112,11 @@ function ReplyItem({ reply, signedIn }: { reply: PublicReply; signedIn: boolean 
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <p className="text-sm">
           <span className="font-semibold break-all">{reply.author_pseudonym}</span>
+          {reply.author_is_verified && (
+            <span className="ml-1">
+              <VerifiedBadge size={16} />
+            </span>
+          )}
           {reply.is_mine && <span className="ml-1 text-xs text-muted">(you)</span>}
           <span className="text-muted">
             {" "}
