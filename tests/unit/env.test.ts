@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatEnvError, publicEnvSchema, serverEnvSchema } from "@/lib/env.schema";
+import { formatEnvError, publicEnvSchema, serverEnvSchema, vercelSiteUrl } from "@/lib/env.schema";
 
 const validKey = "x".repeat(40);
 
@@ -27,5 +27,13 @@ describe("serverEnvSchema", () => {
   it("requires the service-role key", () => {
     expect(serverEnvSchema.safeParse({}).success).toBe(false);
     expect(serverEnvSchema.safeParse({ SUPABASE_SERVICE_ROLE_KEY: validKey }).success).toBe(true);
+  });
+});
+
+describe("vercelSiteUrl", () => {
+  it("uses the production domain in production and the branch URL on previews", () => {
+    expect(vercelSiteUrl({ VERCEL_ENV: "production", VERCEL_PROJECT_PRODUCTION_URL: "workecho.ng", VERCEL_URL: "x.vercel.app" })).toBe("https://workecho.ng");
+    expect(vercelSiteUrl({ VERCEL_ENV: "preview", VERCEL_BRANCH_URL: "app-git-branch.vercel.app", VERCEL_URL: "x.vercel.app" })).toBe("https://app-git-branch.vercel.app");
+    expect(vercelSiteUrl({})).toBeUndefined();
   });
 });
