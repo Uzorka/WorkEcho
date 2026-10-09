@@ -5,8 +5,9 @@ const pages = [
   { path: "/companies", heading: "Companies" },
   { path: "/create", heading: "Create" },
   { path: "/alerts", heading: "Alerts" },
-  { path: "/me", heading: "Me" },
   { path: "/login", heading: "Log in" },
+  { path: "/forgot-password", heading: /forgot your password/i },
+  { path: "/check-email", heading: /check your email/i },
   { path: "/signup", heading: /create an account/i },
   { path: "/privacy", heading: "Privacy" },
   { path: "/terms", heading: "Terms" },
@@ -21,10 +22,16 @@ for (const p of pages) {
   });
 }
 
+test("/me asks logged-out visitors to log in", async ({ page }) => {
+  await page.goto("/me");
+  await expect(page).toHaveURL(/\/login\?next=%2Fme$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Log in" })).toBeVisible();
+});
+
 test("nav links work", async ({ page }) => {
   await page.goto("/");
   const nav = page.getByRole("navigation", { name: "Main" }).filter({ visible: true });
-  for (const label of ["Companies", "Create", "Alerts", "Me", "Home"]) {
+  for (const label of ["Companies", "Create", "Alerts", "Home"]) {
     await nav.getByRole("link", { name: label, exact: true }).click();
     await expect(nav.getByRole("link", { name: label, exact: true })).toHaveAttribute("aria-current", "page");
   }

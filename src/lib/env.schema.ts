@@ -11,8 +11,10 @@ export const publicEnvSchema = z.object({
 
 // Server-only variables. Never import these into client code.
 export const serverEnvSchema = z.object({
-  // Optional until a slice actually needs admin-level database access.
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(20).optional(),
+  // Needed for pseudonym assignment and account deletion (server code only).
+  SUPABASE_SERVICE_ROLE_KEY: z
+    .string({ message: "SUPABASE_SERVICE_ROLE_KEY is required" })
+    .min(20, { message: "SUPABASE_SERVICE_ROLE_KEY looks missing or too short" }),
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;

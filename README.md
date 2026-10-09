@@ -36,8 +36,24 @@ Use **either** of these:
 The app checks its environment variables at startup and refuses to start if
 they are missing or malformed.
 
-`SUPABASE_SERVICE_ROLE_KEY` bypasses Row Level Security. Use it only in
+`SUPABASE_SERVICE_ROLE_KEY` is required. It bypasses Row Level Security, so use it only in
 server-only files (`src/lib/supabase/admin.ts`). Never add a `NEXT_PUBLIC_` prefix to it.
+
+### Auth emails
+
+Locally, confirmation and password-reset emails are caught by Mailpit at http://127.0.0.1:54324.
+Our templates live in `supabase/templates/` and link to `/auth/confirm?token_hash=…`, which works
+even when the link is opened in a different browser or device.
+
+For a **hosted** project, in the Supabase dashboard:
+
+1. Authentication → Sign In / Providers → Email: turn on **Confirm email**; set minimum password length to 8.
+2. Authentication → URL Configuration: set **Site URL** to your site (same as `NEXT_PUBLIC_SITE_URL`)
+   and add `https://<your-site>/**` to the redirect URLs.
+3. Authentication → Emails: paste `supabase/templates/confirmation.html` into "Confirm signup" and
+   `supabase/templates/recovery.html` into "Reset password". (Without this, Supabase's default
+   links still work, but only in the same browser the user signed up in.)
+4. Set up custom SMTP before launch; Supabase's built-in email sender is heavily rate-limited.
 
 Database changes go in `supabase/migrations/` as migration files. Dev-only
 fictional seed data goes in `supabase/seed.sql`. Run `npm run db:reset` to apply both locally.
@@ -51,7 +67,8 @@ fictional seed data goes in `supabase/seed.sql`. Run `npm run db:reset` to apply
 | `npm run typecheck` | TypeScript check |
 | `npm test` | Unit tests (Vitest) |
 | `npm run build` | Production build |
-| `npm run test:e2e` | End-to-end tests (Playwright); run `npm run build` first |
+| `npm run test:db` | Database permission tests (needs local Supabase running and `.env.local`) |
+| `npm run test:e2e` | End-to-end tests (Playwright); run `npm run build` first. The account tests need local Supabase (they read emails from Mailpit) |
 | `npm run check` | Lint + typecheck + unit tests + build |
 
 For Playwright, run `npx playwright install chromium` once. If you already have a
@@ -65,11 +82,15 @@ src/
   components/       app shell: sidebar, bottom nav, theme toggle
   lib/env*.ts       Zod-validated environment variables
   lib/supabase/     browser, server, middleware and server-only admin clients
-  middleware.ts     refreshes the Supabase session cookie
+  lib/pseudonym.ts  pseudonym generator
+  lib/routes.ts     which pages need login / onboarding
+  middleware.ts     refreshes the Supabase session cookie and protects routes
 supabase/
   config.toml       Supabase CLI config
   migrations/       SQL migrations (with RLS)
+  templates/        auth email templates
   seed.sql          fictional dev data only
 tests/unit/         Vitest
+tests/db/           Vitest permission tests against a real local Supabase
 tests/e2e/          Playwright
 ```

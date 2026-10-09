@@ -24,7 +24,8 @@ describe("publicEnvSchema", () => {
 });
 
 describe("serverEnvSchema", () => {
-  it("allows the service-role key to be absent", () => {
-    expect(serverEnvSchema.safeParse({}).success).toBe(true);
+  it("requires the service-role key", () => {
+    expect(serverEnvSchema.safeParse({}).success).toBe(false);
+    expect(serverEnvSchema.safeParse({ SUPABASE_SERVICE_ROLE_KEY: validKey }).success).toBe(true);
   });
 });

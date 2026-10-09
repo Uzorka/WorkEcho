@@ -7,9 +7,7 @@ import { serverEnv } from "@/lib/env.server";
 // Server-only (enforced by the "server-only" import). Use sparingly, and
 // never return its raw results to the browser.
 export function createAdminClient() {
-  const key = serverEnv().SUPABASE_SERVICE_ROLE_KEY;
-  if (!key) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set");
-  return createClient(publicEnv().NEXT_PUBLIC_SUPABASE_URL, key, {
+  return createClient(publicEnv().NEXT_PUBLIC_SUPABASE_URL, serverEnv().SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
