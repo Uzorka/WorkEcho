@@ -59,6 +59,18 @@ Database changes go in `supabase/migrations/` as migration files. Dev-only
 fictional seed data goes in `supabase/seed.sql` (20 "Demo …" companies and a few demo reviews).
 Run `npm run db:reset` to apply both locally. The end-to-end tests expect the seed data.
 
+### Admins
+
+Admin rights can only be granted in the database. In the Supabase SQL editor:
+
+```sql
+update public.profiles
+set is_admin = true
+where id = (select id from auth.users where email = 'you@example.com');
+```
+
+The account must have finished onboarding (so it has a profile). Admins then see "Open the admin area" on /me.
+
 ## Commands
 
 | Command | What it does |

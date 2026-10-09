@@ -14,6 +14,7 @@ import {
   parseNaira,
 } from "./companies";
 import { NIGERIAN_STATES } from "./nigeria";
+import { CONTACT_DETAILS_MESSAGE, hasBlockedContactDetails } from "./sensitive";
 
 const keys = <T extends Record<string, string>>(o: T) => Object.keys(o) as [keyof T & string, ...(keyof T & string)[]];
 const blankToNull = (v: unknown) => (v === "" || v === undefined ? null : v);
@@ -79,10 +80,18 @@ export const interviewSchema = z.object({
     .string()
     .trim()
     .min(L.questions.min, { message: `Tell us a bit more (at least ${L.questions.min} characters).` })
-    .max(L.questions.max, { message: `Keep it under ${L.questions.max} characters.` }),
+    .max(L.questions.max, { message: `Keep it under ${L.questions.max} characters.` })
+    .refine((v) => !hasBlockedContactDetails(v), { message: CONTACT_DETAILS_MESSAGE }),
   tips: z.preprocess(
     (v) => (typeof v === "string" && v.trim() === "" ? null : v),
-    z.string().trim().max(L.tips.max, { message: `Keep tips under ${L.tips.max} characters.` }).nullable().optional().transform((v) => v ?? null),
+    z
+      .string()
+      .trim()
+      .max(L.tips.max, { message: `Keep tips under ${L.tips.max} characters.` })
+      .nullable()
+      .optional()
+      .transform((v) => v ?? null)
+      .refine((v) => !hasBlockedContactDetails(v), { message: CONTACT_DETAILS_MESSAGE }),
   ),
   experience: z.enum(keys(INTERVIEW_EXPERIENCES), { message: "How was the experience overall?" }),
 });

@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signOut } from "@/app/auth/actions";
 import { SubmitButton } from "@/components/forms";
+import { BannedNotice } from "@/components/BannedNotice";
 import { Notice } from "@/components/Notice";
 import { secondaryButtonClass } from "@/components/styles";
 import { getMyProfile, requireUser } from "@/lib/auth";
 import { USER_TYPE_LABELS } from "@/lib/account-constants";
 import { stateLabel } from "@/lib/nigeria";
+import { createClient } from "@/lib/supabase/server";
 import { ChangePasswordForm } from "./ChangePasswordForm";
 import { DeleteAccountForm } from "./DeleteAccountForm";
 
@@ -22,11 +25,14 @@ export default async function MePage({ searchParams }: { searchParams: Promise<R
   await requireUser("/me");
   const profile = await getMyProfile();
   if (!profile?.onboarded_at || !profile.user_type) redirect("/onboarding");
+  const supabase = await createClient();
+  const isAdmin = (await supabase.rpc("is_admin")).data === true;
 
   return (
     <section className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Me</h1>
       {notice && NOTICES[notice] && <Notice>{NOTICES[notice]}</Notice>}
+      {profile.is_banned && <BannedNotice />}
 
       <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5">
         <p className="text-sm text-muted">Your pseudonym</p>
@@ -43,6 +49,12 @@ export default async function MePage({ searchParams }: { searchParams: Promise<R
           We protect your identity, but what you write can still reveal you.
         </p>
       </div>
+
+      {isAdmin && (
+        <Link href="/admin" className="self-start font-medium text-primary underline">
+          Open the admin area
+        </Link>
+      )}
 
       <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5">
         <h2 className="text-lg font-semibold">Change password</h2>

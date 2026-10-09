@@ -32,7 +32,7 @@ test("logged-out visitors read the feed: tabs, filters, load more, post page", a
   await expect(first.getByRole("link", { name: "Demo Harbour Bank", exact: true })).toHaveAttribute("href", "/companies/demo-harbour-bank");
   await expect(first.getByRole("link", { name: /Log in to like\. 3 likes/ })).toBeVisible();
   await expect(first.getByRole("link", { name: "2 replies" })).toBeVisible();
-  await expect(first.getByRole("button", { name: /Report/ })).toBeDisabled();
+  await expect(first.getByRole("link", { name: "Report" })).toHaveAttribute("href", /\/login\?next=/);
 
   // Top this week: the most-liked post first.
   await page.getByRole("link", { name: "Top this week" }).click();
@@ -44,8 +44,8 @@ test("logged-out visitors read the feed: tabs, filters, load more, post page", a
   await expect(page).toHaveURL(/category=job_offers/);
   await expect(posts(page)).toHaveCount(2);
 
-  // Post page with replies.
-  await page.goto("/");
+  // Post page with replies (from Top, where it's first, whatever other tests have posted).
+  await page.goto("/?sort=top");
   await posts(page).filter({ hasText: "13th month" }).getByRole("link", { name: /13th month/ }).click();
   await expect(page).toHaveURL(/\/posts\/[0-9a-f-]+$/);
   await expect(page.getByRole("heading", { name: "Replies (2)" })).toBeVisible();

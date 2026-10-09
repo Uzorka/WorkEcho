@@ -173,7 +173,7 @@ describe("notifications", () => {
     expect((await notificationsFor(c)).length).toBe(before.c);
     const n = aNotes.find((x) => x.post_id === id)!;
     expect(n.type).toBe("reply_to_your_post");
-    expect(Object.keys(n).sort()).toEqual(["created_at", "id", "is_read", "post_id", "type", "user_id"]);
+    expect(Object.keys(n).sort()).toEqual(["created_at", "id", "is_read", "message", "post_id", "type", "user_id"]);
   });
 
   it("users read and mark only their own; nobody creates them directly", async () => {
@@ -200,8 +200,17 @@ describe("cursor pagination", () => {
   beforeAll(async () => {
     co = await createTestCompany(admin);
     companies.push(co.id);
+    // Inserted with the service role (no rate limit), spread across 4 authors.
     const authors = [a, b, c, d];
-    for (let i = 0; i < 23; i++) ids.push(await post(authors[i % 4], { company_id: co.id, body: `Page test ${i}` }));
+    for (let i = 0; i < 23; i++) {
+      const { data, error } = await admin
+        .from("posts")
+        .insert({ author_id: authors[i % 4].id, company_id: co.id, category: "general", body: `Page test ${i}` })
+        .select("id")
+        .single();
+      if (error) throw error;
+      ids.push(data.id);
+    }
     // Five posts with the exact same timestamp: the id tie-break must keep them apart.
     const same = new Date(Date.now() - 60_000).toISOString();
     await admin.from("posts").update({ created_at: same }).in("id", ids.slice(5, 10));

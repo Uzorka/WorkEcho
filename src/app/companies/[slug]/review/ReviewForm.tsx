@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { SubmitButton } from "@/components/forms";
 import { ReviewCard } from "@/components/ReviewCard";
+import { SensitiveWarning } from "@/components/SensitiveWarning";
 import { buttonClass, inputClass, secondaryButtonClass } from "@/components/styles";
 import {
   DEPARTMENTS,
@@ -463,6 +464,7 @@ function Text({
         {min && len < min ? `${len} / at least ${min} characters` : `${len} / ${max}`}
       </p>
       <ErrorText id={`${id}-error`} error={error} />
+      <SensitiveWarning text={value} />
     </div>
   );
 }

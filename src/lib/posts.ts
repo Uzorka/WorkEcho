@@ -79,15 +79,3 @@ export function timeAgo(iso: string, now: number = Date.now()): string {
   if (d < 7) return `${d}d`;
   return new Date(iso).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: d > 300 ? "numeric" : undefined });
 }
-
-// ---------------------------------------------------------------- contact details
-
-/**
- * Phone numbers and email addresses aren't allowed in posts (privacy and
- * content rules). Catches common Nigerian formats, with or without spaces.
- */
-export function containsContactDetails(text: string): boolean {
-  if (/[^\s@]+@[^\s@]+\.[a-z]{2,}/i.test(text)) return true;
-  const digitsOnly = text.replace(/(?<=\d)[\s.-]+(?=\d)/g, "");
-  return /(?:\+?234|\b0)[789][01]\d{8}\b/.test(digitsOnly);
-}

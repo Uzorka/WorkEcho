@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createPost } from "@/app/posts/actions";
+import { BannedNotice } from "@/components/BannedNotice";
 import { PostComposer } from "@/components/feed/PostComposer";
 import { buttonClass, inputClass } from "@/components/styles";
-import { getUser, requireUser } from "@/lib/auth";
+import { getMyProfile, getUser, requireUser } from "@/lib/auth";
 import { getCompany, listCompanies } from "@/lib/company-data";
 import { POST_CATEGORIES } from "@/lib/posts";
 
@@ -25,6 +26,15 @@ export default async function CreatePage({
   const sp = await searchParams;
   const type = (Object.keys(TYPES) as ShareType[]).find((t) => t === sp.type);
   const q = (sp.q ?? "").trim().slice(0, 100);
+
+  const banned = (await getUser()) ? Boolean((await getMyProfile())?.is_banned) : false;
+  if (banned)
+    return (
+      <section className="flex flex-col gap-5">
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Create</h1>
+        <BannedNotice />
+      </section>
+    );
 
   if (!type) {
     const user = await getUser();

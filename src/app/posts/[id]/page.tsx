@@ -52,7 +52,7 @@ export default async function PostPage({ params, searchParams }: Props) {
             <h2 id="replies-heading" className="text-lg font-semibold">
               Replies ({replies.length})
             </h2>
-            <ReplyList replies={replies} />
+            <ReplyList replies={replies} signedIn={Boolean(user)} />
             {user ? <ReplyForm postId={id} /> : <LoginToReply postId={id} />}
           </section>
         </>

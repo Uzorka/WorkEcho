@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Notice } from "@/components/Notice";
+import { ReportButton } from "@/components/ReportButton";
 import { buttonClass } from "@/components/styles";
 import { getUser } from "@/lib/auth";
 import { getCompany, getCompanyCounts, getMySalary, getSalaryStats } from "@/lib/company-data";
@@ -64,6 +65,9 @@ export default async function CompanySalariesPage({ params, searchParams }: Prop
                   <th scope="col" className="px-4 py-3 text-right font-medium">
                     Reports
                   </th>
+                  <th scope="col" className="px-2 py-3">
+                    <span className="sr-only">Report a problem</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -78,6 +82,16 @@ export default async function CompanySalariesPage({ params, searchParams }: Prop
                       {formatNaira(g.lowest_naira)} – {formatNaira(g.highest_naira)}
                     </td>
                     <td className="px-4 py-3 text-right">{g.report_count}</td>
+                    <td className="px-2 py-1">
+                      <ReportButton
+                        type="salary_group"
+                        id={company.id}
+                        roleGroup={g.role_group}
+                        level={g.level}
+                        signedIn={Boolean(user)}
+                        loginNext={`/companies/${slug}/salaries`}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>

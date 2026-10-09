@@ -50,3 +50,30 @@ export async function signUpAndOnboard(page: Page) {
   await expect(page).toHaveURL(/\/me/);
   return creds;
 }
+
+/** Service-role client for test setup only (reads .env.local; never used by the app). */
+export async function serviceClient() {
+  const { readFileSync } = await import("node:fs");
+  const { createClient } = await import("@supabase/supabase-js");
+  const env = Object.fromEntries(
+    readFileSync(".env.local", "utf8")
+      .split("\n")
+      .filter((l) => l.includes("=") && !l.startsWith("#"))
+      .map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1).trim()]),
+  );
+  return createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+}
+
+export async function makeAdmin(email: string) {
+  const admin = await serviceClient();
+  const { data } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  const user = data.users.find((u) => u.email === email);
+  if (!user) throw new Error("user not found");
+  const { error } = await admin.from("profiles").update({ is_admin: true }).eq("id", user.id);
+  if (error) throw error;
+}
+
+export async function pseudonymOf(page: Page) {
+  await page.goto("/me");
+  return (await page.getByTestId("pseudonym").textContent())!.trim();
+}

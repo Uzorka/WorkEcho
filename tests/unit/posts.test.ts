@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { decodeCursor, encodeCursor } from "@/lib/feed-cursor";
 import { postSchema, replySchema } from "@/lib/post-schema";
-import { avatarColour, avatarInitials, containsContactDetails, timeAgo } from "@/lib/posts";
+import { avatarColour, avatarInitials, timeAgo } from "@/lib/posts";
 
 const id = "10000000-0000-4000-8000-000000000001";
 
@@ -40,17 +40,6 @@ describe("timeAgo", () => {
     expect(timeAgo("2026-10-09T09:00:00Z", now)).toBe("3h");
     expect(timeAgo("2026-10-07T12:00:00Z", now)).toBe("2d");
     expect(timeAgo("2026-09-01T12:00:00Z", now)).toMatch(/Sept?/);
-  });
-});
-
-describe("contact details", () => {
-  it("spots phone numbers and emails", () => {
-    for (const t of ["call me on 08031234567", "0803 123 4567", "+234 803 123 4567", "2348031234567", "mail ada@example.com"])
-      expect(containsContactDetails(t)).toBe(true);
-  });
-  it("doesn't flag money or ordinary numbers", () => {
-    for (const t of ["₦250,000 a month", "I worked there 3 years", "Q3 2026", "between 9am and 5pm", "10000000"])
-      expect(containsContactDetails(t)).toBe(false);
   });
 });
 

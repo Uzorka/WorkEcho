@@ -14,7 +14,9 @@
 - [x] **Slice 4 — Social feed, posts and replies**: posts, one-level replies, likes, reply
       notifications; home feed (Latest / Top this week, category chips, cursor "Load more"), post
       pages, composer with company search, company Discussions tab, /alerts with unread badge.
-- [ ] Slice 5 — Safety, moderation and admin
+- [x] **Slice 5 — Safety, moderation and admin**: privacy warnings + server-side contact-detail
+      blocking, reports with auto-hide, rate limits, bans, /admin (reports, requests, companies, users,
+      action log), draft guidelines / privacy / terms.
 - [ ] Slice 6 — Verified checkmark
 - [ ] Slice 7 — Polish, audit and launch
 
@@ -138,3 +140,37 @@
   (a post shows up to 200).
 - Checks: lint, typecheck, build, unit tests (53), DB permission tests (82) and Playwright
   (52 tests at 360px mobile and desktop, two full runs) all pass.
+
+## Slice 5 notes
+
+- **Database** (`supabase/migrations/20261013120000_moderation.sql`):
+  - `has_contact_details()` + CHECK constraints on every free-text column (posts, replies, reviews,
+    interview reports, company request names): emails and Nigerian phone numbers (+234 / 0 followed by
+    10 digits, separators allowed) are rejected even for direct API writes.
+  - Rate limits by trigger, counted in `rate_limit_events` (deleting content doesn't reset them):
+    5 posts/hour, 30 replies/hour, 3 reviews/day, 10 reports/hour. Errors use SQLSTATE `P0429` with a
+    friendly message the app shows as-is. Service-role/seed writes aren't limited.
+  - `reports` (post, reply, review, interview, salary_group): filed only via `report_content()`; one per
+    user per item; not readable by anyone in the browser. 3 open reports from different users hide
+    the item (logged as `auto_hide`). Salary groups are never auto-hidden — admins see the individual
+    amounts and hide outliers.
+  - Banned users: all writes already required `can_contribute()`; edits now also require
+    `not_banned()`. Deleting your own content is still allowed.
+  - Admin: `is_admin()` and `admin_*` SECURITY DEFINER functions, each checking `is_admin()` and
+    writing `admin_actions`. Admins see pseudonyms and account age; `admin_banned_user_email()` only
+    works for banned accounts and logs every use.
+  - Notifications gained `moderation_warning` (with a message) for warnings.
+- **App:** live `SensitiveWarning` under every free-text field (emails, phones, staff-ID-like codes,
+  long numbers, highlighted, "this check isn't perfect"); emails/phones also rejected by Zod and the DB.
+  Report button on posts, replies, reviews, interview reports and salary rows. `/admin` (404 for
+  non-admins; every page and action calls `requireAdmin()` and the DB re-checks). Banned users see a
+  "suspended" notice on /me and /create.
+- **Legal pages** are drafts marked "DRAFT — pending legal review". The contact addresses in
+  `src/lib/site.ts` (privacy@ / takedown@workecho.ng) are placeholders until those mailboxes exist,
+  and retention periods for reports and rate-limit records are marked "to be confirmed".
+- **Make yourself an admin** (Supabase SQL editor):
+  `update public.profiles set is_admin = true where id = (select id from auth.users where email = 'you@example.com');`
+- **Not done yet:** no automatic cleanup of old `rate_limit_events`; admins can't edit content text
+  (only hide/remove/restore); no email notifications to banned users.
+- Checks: lint, typecheck, build, unit tests (59), DB permission tests (121) and Playwright
+  (62 tests at 360px mobile and desktop, two full runs) all pass.

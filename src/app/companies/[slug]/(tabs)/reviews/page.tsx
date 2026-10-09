@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Notice } from "@/components/Notice";
+import { ReportButton } from "@/components/ReportButton";
 import { ReviewCard } from "@/components/ReviewCard";
 import { buttonClass, secondaryButtonClass } from "@/components/styles";
 import { getUser } from "@/lib/auth";
@@ -114,6 +115,7 @@ export default async function CompanyReviewsPage({ params, searchParams }: Props
                             </Link>
                           </>
                         )}
+                        {!mine && <ReportButton type="review" id={r.id} signedIn={Boolean(user)} loginNext={`/companies/${slug}/reviews`} />}
                       </div>
                     }
                   />

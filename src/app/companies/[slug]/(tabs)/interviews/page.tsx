@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Notice } from "@/components/Notice";
+import { ReportButton } from "@/components/ReportButton";
 import { buttonClass, secondaryButtonClass } from "@/components/styles";
 import { getUser } from "@/lib/auth";
 import { INTERVIEWS_PER_PAGE, getCompany, getInterviewStats, getInterviews, getMyInterview } from "@/lib/company-data";
@@ -116,6 +117,9 @@ export default async function CompanyInterviewsPage({ params, searchParams }: Pr
                     <p className="whitespace-pre-line break-words">{r.tips}</p>
                   </div>
                 )}
+                <div className="-mx-2 -mb-2 flex flex-wrap border-t border-border pt-1">
+                  <ReportButton type="interview" id={r.id} signedIn={Boolean(user)} loginNext={`/companies/${slug}/interviews`} />
+                </div>
               </article>
             </li>
           ))}

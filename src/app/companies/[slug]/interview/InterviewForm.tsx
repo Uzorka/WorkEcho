@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { CheckboxGroup, PrivacyReminder, RadioGroup, SelectField } from "@/components/ChoiceFields";
 import { Field, FormMessage, SubmitButton } from "@/components/forms";
+import { SensitiveWarning } from "@/components/SensitiveWarning";
 import { buttonClass, inputClass } from "@/components/styles";
 import { DEPARTMENTS, INTERVIEW_EXPERIENCES, INTERVIEW_LIMITS, INTERVIEW_OUTCOMES, INTERVIEW_STAGES } from "@/lib/companies";
 import type { ReportFormState } from "../../actions";
@@ -11,6 +12,7 @@ export type InterviewValues = Record<string, string | string[]>;
 
 function TextArea({ label, name, defaultValue, error, max, hint }: { label: string; name: string; defaultValue?: string; error?: string; max: number; hint?: string }) {
   const id = `ta-${name}`;
+  const [text, setText] = useState(defaultValue ?? "");
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="font-medium">
@@ -27,6 +29,7 @@ function TextArea({ label, name, defaultValue, error, max, hint }: { label: stri
         rows={5}
         maxLength={max}
         defaultValue={defaultValue}
+        onChange={(e) => setText(e.target.value)}
         className={`${inputClass} min-h-32 py-2`}
         aria-invalid={error ? true : undefined}
         aria-describedby={[hint ? `${id}-hint` : "", error ? `${id}-error` : ""].join(" ").trim() || undefined}
@@ -36,6 +39,7 @@ function TextArea({ label, name, defaultValue, error, max, hint }: { label: stri
           {error}
         </p>
       )}
+      <SensitiveWarning text={text} />
     </div>
   );
 }

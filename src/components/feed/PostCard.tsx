@@ -6,7 +6,8 @@ import { useState } from "react";
 import { POST_CATEGORIES, POST_PREVIEW_CHARS, type PublicPost } from "@/lib/posts";
 import { Avatar } from "./Avatar";
 import { LikeButton } from "./LikeButton";
-import { OwnPostActions, ReportButton, ShareButton } from "./PostActions";
+import { ReportButton } from "@/components/ReportButton";
+import { OwnPostActions, ShareButton } from "./PostActions";
 import { TimeAgo } from "./TimeAgo";
 
 export function PostCard({
@@ -85,7 +86,7 @@ export function PostCard({
             }}
           />
         ) : (
-          <ReportButton />
+          <ReportButton type="post" id={post.id} signedIn={signedIn} loginNext={href} />
         )}
       </footer>
     </article>

@@ -3,6 +3,7 @@
 import { startTransition, useActionState, useEffect, useRef, useState, type FormEvent } from "react";
 import { searchCompanies, type PostFormState } from "@/app/posts/actions";
 
+import { SensitiveWarning } from "@/components/SensitiveWarning";
 import { buttonClass, inputClass } from "@/components/styles";
 import { POST_CATEGORIES, POST_MAX } from "@/lib/posts";
 
@@ -111,6 +112,7 @@ export function PostComposer({
             {e.body}
           </p>
         )}
+        <SensitiveWarning text={body} />
       </div>
       <button type="submit" className={buttonClass} disabled={pending}>
         {pending ? (editing ? "Saving…" : "Posting…") : editing ? "Save changes" : "Post"}

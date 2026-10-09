@@ -9,6 +9,9 @@ import {
   YES_NO_SOMETIMES,
 } from "./companies";
 import { NIGERIAN_STATES } from "./nigeria";
+import { CONTACT_DETAILS_MESSAGE, hasBlockedContactDetails } from "./sensitive";
+
+const noContact = (v: string | null) => !hasBlockedContactDetails(v);
 
 const keys = <T extends Record<string, string>>(o: T) => Object.keys(o) as [keyof T & string, ...(keyof T & string)[]];
 const blankToNull = (v: unknown) => (v === "" || v === undefined ? null : v);
@@ -25,7 +28,8 @@ const text = (label: string, { min, max }: { min: number; max: number }) =>
     .string()
     .trim()
     .min(min, { message: `${label} needs at least ${min} characters.` })
-    .max(max, { message: `${label} can be at most ${max} characters.` });
+    .max(max, { message: `${label} can be at most ${max} characters.` })
+    .refine(noContact, { message: CONTACT_DETAILS_MESSAGE });
 
 export const reviewSchema = z.object({
   employment_status: z.enum(keys(EMPLOYMENT_STATUSES), { message: "Are you a current or former employee?" }),
@@ -56,7 +60,8 @@ export const reviewSchema = z.object({
       .max(REVIEW_LIMITS.advice.max, { message: `Advice can be at most ${REVIEW_LIMITS.advice.max} characters.` })
       .nullable()
       .optional()
-      .transform((v) => v ?? null),
+      .transform((v) => v ?? null)
+      .refine(noContact, { message: CONTACT_DETAILS_MESSAGE }),
   ),
 });
 export type ReviewInput = z.infer<typeof reviewSchema>;

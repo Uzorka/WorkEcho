@@ -12,6 +12,7 @@ export type OwnProfile = {
   state: string | null;
   pseudonym_regenerations: number;
   onboarded_at: string | null;
+  is_banned?: boolean;
 };
 
 const OWN_PROFILE_COLUMNS = "pseudonym, user_type, state, pseudonym_regenerations, onboarded_at";

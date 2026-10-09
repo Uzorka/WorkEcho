@@ -48,7 +48,7 @@ export async function getReplies(postId: string) {
   return (data ?? []) as PublicReply[];
 }
 
-export type Notification = { id: string; type: string; post_id: string; is_read: boolean; created_at: string };
+export type Notification = { id: string; type: string; post_id: string | null; message: string | null; is_read: boolean; created_at: string };
 
 export async function getUnreadCount() {
   const supabase = await createClient();
@@ -60,16 +60,16 @@ export async function getNotifications() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("notifications")
-    .select("id, type, post_id, is_read, created_at")
+    .select("id, type, post_id, message, is_read, created_at")
     .order("created_at", { ascending: false })
     .limit(50);
   if (error) throw new Error("Could not load notifications");
   const notifications = (data ?? []) as Notification[];
   // Excerpts of the posts they're about (still visible ones only).
-  const ids = [...new Set(notifications.map((n) => n.post_id))];
+  const ids = [...new Set(notifications.map((n) => n.post_id).filter((id): id is string => Boolean(id)))];
   const { data: posts } = ids.length
     ? await supabase.from("public_posts").select("id, body").in("id", ids)
     : { data: [] as { id: string; body: string }[] };
   const excerpts = new Map((posts ?? []).map((p) => [p.id as string, p.body as string]));
-  return notifications.map((n) => ({ ...n, excerpt: excerpts.get(n.post_id) ?? null }));
+  return notifications.map((n) => ({ ...n, excerpt: n.post_id ? (excerpts.get(n.post_id) ?? null) : null }));
 }

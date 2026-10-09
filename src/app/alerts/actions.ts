@@ -14,12 +14,12 @@ export async function markAllRead() {
   revalidatePath("/", "layout");
 }
 
-/** Mark one notification read, then go to the post. */
-export async function openNotification(id: string, postId: string) {
+/** Mark one notification read, then go to its post (if it has one). */
+export async function openNotification(id: string, postId: string | null) {
   await requireUser("/alerts");
-  if (!uuidSchema.safeParse(id).success || !uuidSchema.safeParse(postId).success) redirect("/alerts");
+  if (!uuidSchema.safeParse(id).success) redirect("/alerts");
   const supabase = await createClient();
   await supabase.from("notifications").update({ is_read: true }).eq("id", id);
   revalidatePath("/", "layout");
-  redirect(`/posts/${postId}`);
+  redirect(postId && uuidSchema.safeParse(postId).success ? `/posts/${postId}` : "/alerts");
 }

@@ -23,7 +23,7 @@ export async function getMyProfile(): Promise<OwnProfile | null> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("profiles")
-    .select("pseudonym, user_type, state, pseudonym_regenerations, onboarded_at")
+    .select("pseudonym, user_type, state, pseudonym_regenerations, onboarded_at, is_banned")
     .maybeSingle();
   return (data as OwnProfile | null) ?? null;
 }

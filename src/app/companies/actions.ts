@@ -37,6 +37,7 @@ export async function submitReview(slug: string, _prev: ReviewFormState, formDat
 
   if (error) {
     if (error.code === "23505") return { message: "You've already reviewed this company. Refresh the page to edit your review." };
+    if (error.code === "P0429") return { message: error.message };
     if (error.code === "42501") return { message: "You can't post a review right now." };
     return { message: "We couldn't save your review. Please try again." };
   }

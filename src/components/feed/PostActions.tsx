@@ -28,15 +28,6 @@ export function ShareButton({ postId }: { postId: string }) {
   );
 }
 
-// Reporting is built in Slice 5. Until then this is clearly marked as unavailable.
-export function ReportButton() {
-  return (
-    <button type="button" disabled className={`${btn} cursor-not-allowed opacity-60`} title="Reporting is coming soon">
-      Report <span className="text-xs">(soon)</span>
-    </button>
-  );
-}
-
 export function OwnPostActions({ postId, onDeleted }: { postId: string; onDeleted: () => void }) {
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState(false);

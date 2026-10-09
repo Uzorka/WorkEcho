@@ -14,7 +14,9 @@ export type PostFormState = { errors?: Record<string, string>; message?: string;
 
 const isUuid = (v: unknown): v is string => uuidSchema.safeParse(v).success;
 
-function writeError(code: string | undefined) {
+/** Database errors -> friendly text. Rate-limit messages (P0429) are written by us in SQL. */
+function writeError(code: string | undefined, message?: string) {
+  if (code === "P0429" && message) return message;
   if (code === "42501") return "You can't post right now.";
   if (code === "23514") return "Please check what you wrote and try again.";
   return "Something went wrong. Please try again.";
@@ -52,7 +54,7 @@ export async function createPost(_prev: PostFormState, formData: FormData): Prom
 
   const supabase = await createClient();
   const { data, error } = await supabase.from("posts").insert(parsed.data).select("id").single();
-  if (error || !data) return { message: writeError(error?.code), values };
+  if (error || !data) return { message: writeError(error?.code, error?.message), values };
   revalidatePath("/");
   redirect(`/posts/${data.id}`);
 }
@@ -87,7 +89,7 @@ export async function createReply(postId: string, _prev: PostFormState, formData
   if (!parsed.success) return { errors: fieldErrors(parsed.error), values };
   const supabase = await createClient();
   const { error } = await supabase.from("replies").insert({ post_id: postId, body: parsed.data.body });
-  if (error) return { message: error.code === "42501" ? "You can't reply to this post." : writeError(error.code), values };
+  if (error) return { message: error.code === "42501" ? "You can't reply to this post." : writeError(error.code, error.message), values };
   revalidatePath(`/posts/${postId}`);
   return { success: "Reply posted." };
 }

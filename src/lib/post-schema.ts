@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { POST_CATEGORIES, POST_MAX, REPLY_MAX, containsContactDetails } from "./posts";
-
-const CONTACT = "Please remove phone numbers and email addresses. They can identify you or others.";
+import { POST_CATEGORIES, POST_MAX, REPLY_MAX } from "./posts";
+import { CONTACT_DETAILS_MESSAGE, hasBlockedContactDetails } from "./sensitive";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const body = (max: number, what: string) =>
@@ -10,7 +9,7 @@ const body = (max: number, what: string) =>
     .trim()
     .min(1, { message: `Write something before you ${what}.` })
     .max(max, { message: `Keep it to ${max.toLocaleString("en-NG")} characters or fewer.` })
-    .refine((v) => !containsContactDetails(v), { message: CONTACT });
+    .refine((v) => !hasBlockedContactDetails(v), { message: CONTACT_DETAILS_MESSAGE });
 
 export const postSchema = z.object({
   category: z.enum(Object.keys(POST_CATEGORIES) as [keyof typeof POST_CATEGORIES], { message: "Choose a category." }),

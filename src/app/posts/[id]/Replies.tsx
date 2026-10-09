@@ -5,6 +5,8 @@ import { useActionState, useState, useTransition } from "react";
 import { Avatar } from "@/components/feed/Avatar";
 import { TimeAgo } from "@/components/feed/TimeAgo";
 import { SubmitButton } from "@/components/forms";
+import { ReportButton } from "@/components/ReportButton";
+import { SensitiveWarning } from "@/components/SensitiveWarning";
 import { buttonClass, inputClass, secondaryButtonClass } from "@/components/styles";
 import { REPLY_MAX, type PublicReply } from "@/lib/posts";
 import { createReply, deleteReply, updateReply, type PostFormState } from "../actions";
@@ -12,7 +14,8 @@ import { createReply, deleteReply, updateReply, type PostFormState } from "../ac
 const small = "inline-flex min-h-11 items-center rounded-xl px-2 text-sm font-medium text-muted hover:bg-primary-soft hover:text-text";
 
 function BodyField({ id, defaultValue, error, label }: { id: string; defaultValue?: string; error?: string; label: string }) {
-  const [len, setLen] = useState(defaultValue?.length ?? 0);
+  const [text, setText] = useState(defaultValue ?? "");
+  const len = text.length;
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="font-medium">
@@ -23,7 +26,7 @@ function BodyField({ id, defaultValue, error, label }: { id: string; defaultValu
         name="body"
         rows={3}
         defaultValue={defaultValue}
-        onChange={(e) => setLen(e.target.value.length)}
+        onChange={(e) => setText(e.target.value)}
         className={`${inputClass} min-h-24 py-2`}
         aria-invalid={error ? true : undefined}
         aria-describedby={`${id}-count${error ? ` ${id}-error` : ""}`}
@@ -36,6 +39,7 @@ function BodyField({ id, defaultValue, error, label }: { id: string; defaultValu
           {error}
         </p>
       )}
+      <SensitiveWarning text={text} />
     </div>
   );
 }
@@ -93,7 +97,7 @@ function EditReply({ reply, onDone }: { reply: PublicReply; onDone: () => void }
   );
 }
 
-function ReplyItem({ reply }: { reply: PublicReply }) {
+function ReplyItem({ reply, signedIn }: { reply: PublicReply; signedIn: boolean }) {
   const [editing, setEditing] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [deleted, setDeleted] = useState(false);
@@ -118,6 +122,11 @@ function ReplyItem({ reply }: { reply: PublicReply }) {
           <EditReply reply={reply} onDone={() => setEditing(false)} />
         ) : (
           <p className="whitespace-pre-line break-words">{reply.body}</p>
+        )}
+        {!reply.is_mine && (
+          <div className="-mx-2 flex flex-wrap items-center">
+            <ReportButton type="reply" id={reply.id} signedIn={signedIn} loginNext={`/posts/${reply.post_id}`} />
+          </div>
         )}
         {reply.is_mine && !editing && (
           <div className="-mx-2 flex flex-wrap items-center">
@@ -161,12 +170,12 @@ function ReplyItem({ reply }: { reply: PublicReply }) {
   );
 }
 
-export function ReplyList({ replies }: { replies: PublicReply[] }) {
+export function ReplyList({ replies, signedIn }: { replies: PublicReply[]; signedIn: boolean }) {
   if (replies.length === 0) return <p className="text-sm text-muted">No replies yet. Be the first.</p>;
   return (
     <ul className="flex flex-col">
       {replies.map((r) => (
-        <ReplyItem key={`${r.id}-${r.edited_at}`} reply={r} />
+        <ReplyItem key={`${r.id}-${r.edited_at}`} reply={r} signedIn={signedIn} />
       ))}
     </ul>
   );
