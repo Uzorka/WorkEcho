@@ -1,0 +1,2 @@
+-- Local development seed data only. Everything here must be clearly fictional.
+-- Never run against production. Populated from Slice 2 onward.
