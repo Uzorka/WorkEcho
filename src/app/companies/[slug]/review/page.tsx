@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DeleteOwnForm } from "@/components/DeleteOwnForm";
 import { requireUser } from "@/lib/auth";
 import { getCompany, getMyReview } from "@/lib/company-data";
 import { EMPTY_REVIEW, type ReviewValues } from "@/lib/review-steps";
 import { deleteReview, submitReview } from "../../actions";
-import { DeleteReviewForm } from "./DeleteReviewForm";
 import { ReviewForm } from "./ReviewForm";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -41,14 +41,14 @@ export default async function WriteReviewPage({ params }: Props) {
 
   return (
     <section className="mx-auto flex w-full max-w-xl flex-col gap-6">
-      <Link href={`/companies/${slug}`} className="-my-2 self-start py-2 text-sm font-medium text-primary underline">
+      <Link href={`/companies/${slug}/reviews`} className="-my-2 self-start py-2 text-sm font-medium text-primary underline">
         ← Back to {company.name}
       </Link>
       <ReviewForm slug={slug} companyName={company.name} initial={initial} editing={Boolean(mine)} action={submitReview.bind(null, slug)} />
       {mine && (
         <div className="flex flex-col gap-3 rounded-2xl border border-danger/40 bg-card p-5">
           <h2 className="text-lg font-semibold">Delete your review</h2>
-          <DeleteReviewForm action={deleteReview.bind(null, slug)} />
+          <DeleteOwnForm action={deleteReview.bind(null, slug)} />
         </div>
       )}
     </section>

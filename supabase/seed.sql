@@ -80,3 +80,40 @@ select c.id, ('00000000-0000-4000-8000-00000000000' || n)::uuid, 'current', 'ful
        now() - (n * 30 || ' days')::interval
   from public.companies c, generate_series(1, 2) n
  where c.slug = 'demo-kola-pay';
+
+-- ---------------------------------------------------------------- demo salary reports
+-- Demo Harbour Bank: Tech & IT / Mid has 3 reports (shown); Sales & Marketing / Entry has 2 (hidden).
+
+insert into public.salary_reports (company_id, author_id, role_group, level, employment_type, state,
+  monthly_gross_naira, has_bonus, other_benefits, publish_at)
+select c.id, ('00000000-0000-4000-8000-00000000000' || v.n)::uuid, v.rg::public.department, v.lvl::public.salary_level,
+       'full_time', 'Lagos', v.pay, v.bonus, v.benefits, now() - (v.n * 15 || ' days')::interval
+  from public.companies c
+  join (values
+    (1, 'tech_it', 'mid', 450000, true, array['hmo', 'thirteenth_month']),
+    (2, 'tech_it', 'mid', 520000, true, array['hmo', 'transport']),
+    (3, 'tech_it', 'mid', 610000, false, array['hmo']),
+    (4, 'sales_marketing', 'entry', 180000, false, array[]::text[]),
+    (5, 'sales_marketing', 'entry', 210000, true, array['transport', 'feeding'])
+  ) as v(n, rg, lvl, pay, bonus, benefits) on true
+ where c.slug = 'demo-harbour-bank';
+
+-- ---------------------------------------------------------------- demo interview reports
+
+insert into public.interview_reports (company_id, author_id, role_group, outcome, difficulty, process_weeks,
+  stages, questions_asked, tips, experience, publish_at)
+select c.id, ('00000000-0000-4000-8000-00000000000' || v.n)::uuid, v.rg::public.department,
+       v.outcome::public.interview_outcome, v.diff, v.weeks, v.stages, v.questions, v.tips,
+       v.exp::public.interview_experience, now() - (v.n * 10 || ' days')::interval
+  from public.companies c
+  join (values
+    (1, 'tech_it', 'offer', 3, 4, array['aptitude_test', 'phone_call', 'final_interview'],
+     '(Demo) Explain a project you built. How would you design a simple payments queue?', '(Demo) Practise aptitude tests with a timer.', 'positive'),
+    (2, 'customer_service', 'ghosted', 2, 6, array['aptitude_test', 'panel'],
+     '(Demo) How would you calm an angry customer whose transfer failed?', null, 'negative'),
+    (3, 'sales_marketing', 'no_offer', 3, 3, array['phone_call', 'panel'],
+     '(Demo) Sell this pen to me. What target did you beat at your last job?', '(Demo) Bring numbers from your last role.', 'neutral'),
+    (4, 'finance_accounts', 'offer', 4, 8, array['aptitude_test', 'assessment', 'panel', 'final_interview'],
+     '(Demo) Walk us through a bank reconciliation. Case study on loan provisioning.', null, 'positive')
+  ) as v(n, rg, outcome, diff, weeks, stages, questions, tips, exp) on true
+ where c.slug = 'demo-harbour-bank';

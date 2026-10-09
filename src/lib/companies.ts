@@ -83,3 +83,54 @@ export function isKey<T extends object>(obj: T, k: unknown): k is keyof T {
 export function ilikePattern(term: string): string {
   return `%${term.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
 }
+
+// ---------------------------------------------------------------- salary and interview reports
+
+export const SALARY_LEVELS = { entry: "Entry level", mid: "Mid level", senior: "Senior", manager: "Manager", executive: "Executive" } as const;
+export type SalaryLevel = keyof typeof SALARY_LEVELS;
+
+export const BENEFITS = { hmo: "HMO", transport: "Transport", housing: "Housing", thirteenth_month: "13th month", feeding: "Feeding" } as const;
+export type Benefit = keyof typeof BENEFITS;
+
+export const INTERVIEW_OUTCOMES = { offer: "Got an offer", no_offer: "No offer", ghosted: "Ghosted", withdrew: "I withdrew" } as const;
+export type InterviewOutcome = keyof typeof INTERVIEW_OUTCOMES;
+
+export const INTERVIEW_STAGES = {
+  aptitude_test: "Aptitude test",
+  phone_call: "Phone call",
+  panel: "Panel interview",
+  assessment: "Assessment / case study",
+  final_interview: "Final interview",
+} as const;
+export type InterviewStage = keyof typeof INTERVIEW_STAGES;
+
+export const INTERVIEW_EXPERIENCES = { positive: "Positive", neutral: "Neutral", negative: "Negative" } as const;
+export type InterviewExperience = keyof typeof INTERVIEW_EXPERIENCES;
+
+/** Monthly gross pay bounds (also a CHECK constraint in SQL). */
+export const SALARY_MIN_NAIRA = 30_000;
+export const SALARY_MAX_NAIRA = 50_000_000;
+export const MIN_REPORTS_FOR_SALARY = 3;
+export const MIN_REPORTS_FOR_INTERVIEW_SUMMARY = 3;
+
+export const INTERVIEW_LIMITS = { questions: { min: 10, max: 3000 }, tips: { max: 2000 }, weeks: { max: 52 } } as const;
+
+const nairaFormat = new Intl.NumberFormat("en-NG", { maximumFractionDigits: 0 });
+
+/** "₦520,000" */
+export function formatNaira(amount: number): string {
+  return `₦${nairaFormat.format(amount)}`;
+}
+
+/** Parses what people type: "250,000", "₦ 250000", "250000.00". Returns null if it isn't a whole number. */
+export function parseNaira(input: unknown): number | null {
+  if (typeof input !== "string" && typeof input !== "number") return null;
+  const cleaned = String(input).replace(/naira|ngn|₦|,|\s/gi, "").replace(/\.0+$/, "");
+  if (!/^\d{1,12}$/.test(cleaned)) return null;
+  return Number(cleaned);
+}
+
+/** Same rounding as the SQL view: nearest ₦10,000, halves away from zero. */
+export function roundToNearest10k(amount: number): number {
+  return Math.round(amount / 10_000) * 10_000;
+}

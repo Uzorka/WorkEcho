@@ -8,7 +8,9 @@
 - [x] **Slice 2 — Companies and reviews**: companies, company requests (with near-duplicate check),
       reviews with a random 12–72h publish delay, helpful votes, public views and stats with thresholds,
       /companies search + filters + sort + pagination, company pages, 4-step review form with draft.
-- [ ] Slice 3 — Salary and interview reports
+- [x] **Slice 3 — Salary and interview reports**: salary and interview tables with the same delay and
+      privacy rules as reviews, aggregate-only salary ranges, interview summaries, company tabs, short
+      forms reachable from the company page and the Create (+) button.
 - [ ] Slice 4 — Social feed, posts and replies
 - [ ] Slice 5 — Safety, moderation and admin
 - [ ] Slice 6 — Verified checkmark
@@ -75,3 +77,32 @@
   moderation/reporting of reviews yet (Slice 5). /create still links to Companies for reviews.
 - Checks: lint, typecheck, build, unit tests (33), DB permission tests (47) and Playwright
   (40 tests at 360px mobile and desktop) all pass.
+
+## Slice 3 notes
+
+- **Database** (`supabase/migrations/20261011120000_salary_interview_reports.sql`):
+  - `salary_reports` and `interview_reports`: same model as reviews. One per user per company;
+    users never read `author_id`/`publish_at` and never set `author_id`/`status`/`publish_at`;
+    random 12–72h `publish_at`; authors can edit (unless removed) and delete; banned or
+    not-onboarded users can't submit. Job seekers can submit interview reports.
+  - Amounts outside ₦30,000–₦50,000,000/month are rejected by a CHECK constraint and, with a
+    friendly message, by the form. Benefits/stages are CHECKed against fixed lists.
+  - **No per-report salary is readable by anyone except its author.** The only public salary data is
+    `company_salary_stats`: groups (role group + level) with ≥ 3 visible reports, median / lowest /
+    highest rounded to the nearest ₦10,000 (halves round up). `company_salary_counts` gives counts only.
+  - `public_interview_reports` (quarter only, no author) and `company_interviews()` (newest first);
+    `company_interview_stats` shows % offer, % ghosted, average difficulty at ≥ 3 reports and
+    average weeks at ≥ 3 answers.
+- **Pages:** company pages are now tabs — Overview | Reviews | Salaries | Interviews | Discussions
+  (`src/app/companies/[slug]/(tabs)/`). Discussions is an honest placeholder until Slice 4.
+  Forms at `/companies/[slug]/salary` and `/interview`. `/create` is now real: pick review, salary
+  or interview, then find the company (discussions shown as "coming soon").
+- **Choices made:** state is optional on salary reports; process weeks is optional ("not sure");
+  "None of these" for benefits is stored as an empty list. The interview summary uses the same ≥ 3
+  threshold as ratings (the brief didn't give one).
+- **Seed:** Demo Harbour Bank has 3 Tech & IT / Mid salaries (shown) and 2 Sales / Entry (hidden),
+  plus 4 interview reports.
+- **Not done yet:** salary filters (by state/employment type) and benefit percentages aren't shown;
+  moderation of reports is Slice 5.
+- Checks: lint, typecheck, build, unit tests (44), DB permission tests (65) and Playwright
+  (46 tests at 360px mobile and desktop, two full runs) all pass.

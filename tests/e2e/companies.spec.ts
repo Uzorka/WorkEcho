@@ -28,7 +28,10 @@ test("browse, search, filter and read a company", async ({ page }) => {
   await expect(page.getByRole("img", { name: "Rated 3.8 out of 5" })).toBeVisible();
   await expect(page.getByText("Salary on time: 80% yes")).toBeVisible();
   await expect(page.getByText("Department ratings appear once a department has 10 reviews.")).toBeVisible();
-  // Reviews show no pseudonym, only status/department/type/state/quarter.
+  // Reviews tab: no pseudonym, only status/department/type/state/quarter.
+  await page.getByRole("navigation", { name: "Company sections" }).getByRole("link", { name: /Reviews/ }).click();
+  await expect(page).toHaveURL(/\/companies\/demo-harbour-bank\/reviews$/);
+  await expect(page.getByRole("article")).toHaveCount(5);
   await expect(page.getByText("DemoReviewer", { exact: false })).toHaveCount(0);
   await expect(page.getByText(/Q[1-4] \d{4}/).first()).toBeVisible();
 
@@ -92,7 +95,7 @@ test("write a review in 4 steps, with a saved draft, then edit it", async ({ pag
   await expect(preview.getByText("Salary on time: Sometimes")).toBeVisible();
   await page.getByRole("button", { name: "Submit review" }).click();
 
-  await expect(page).toHaveURL(/\/companies\/demo-weaver-software\?notice=review-submitted/);
+  await expect(page).toHaveURL(/\/companies\/demo-weaver-software\/reviews\?notice=review-submitted/);
   await expect(page.getByText(/Your review will appear within 72 hours/)).toBeVisible();
   // Not visible to readers yet.
   await expect(page.getByText("Good place for corpers")).toHaveCount(0);
@@ -109,7 +112,7 @@ test("write a review in 4 steps, with a saved draft, then edit it", async ({ pag
   await expect(page.getByText("Your changes are saved.")).toBeVisible();
 
   // Helpful votes on someone else's review: toggles on and off, counted once.
-  await page.goto("/companies/demo-harbour-bank");
+  await page.goto("/companies/demo-harbour-bank/reviews");
   const first = page.getByRole("article").first();
   const button = first.getByRole("button", { name: /Helpful/ });
   const before = Number((await button.textContent())!.match(/\d+/)![0]);

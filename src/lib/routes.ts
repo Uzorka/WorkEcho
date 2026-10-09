@@ -9,8 +9,8 @@ const SIGNED_OUT_ONLY = ["/login", "/signup", "/forgot-password", "/check-email"
 /** Pages a signed-in user may still visit before finishing onboarding. */
 const ALLOWED_BEFORE_ONBOARDING = ["/onboarding", "/auth", "/reset-password", "/terms", "/privacy", "/guidelines"];
 
-/** Write pages under public sections, e.g. /companies/some-co/review. */
-const SIGNED_IN_ONLY_PATTERNS = [/^\/companies\/[^/]+\/review\/?$/];
+/** Write pages under public sections, e.g. /companies/some-co/review, /salary, /interview. */
+const SIGNED_IN_ONLY_PATTERNS = [/^\/companies\/[^/]+\/(review|salary|interview)\/?$/];
 
 function matches(pathname: string, prefixes: string[]) {
   return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));

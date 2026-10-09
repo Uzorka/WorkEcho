@@ -35,6 +35,10 @@ describe("routeDecision", () => {
     expect(routeDecision({ pathname: "/companies/demo-co", ...out })).toBeNull();
     expect(routeDecision({ pathname: "/companies", search: "?q=review", ...out })).toBeNull();
     expect(routeDecision({ pathname: "/companies/demo-co/review", ...done })).toBeNull();
+    expect(routeDecision({ pathname: "/companies/demo-co/salary", ...out })).toBe("/login?next=%2Fcompanies%2Fdemo-co%2Fsalary");
+    expect(routeDecision({ pathname: "/companies/demo-co/interview", ...out })).toBe("/login?next=%2Fcompanies%2Fdemo-co%2Finterview");
+    for (const tab of ["reviews", "salaries", "interviews", "discussions"])
+      expect(routeDecision({ pathname: `/companies/demo-co/${tab}`, ...out })).toBeNull();
   });
 
   it("doesn't treat look-alike paths as protected", () => {

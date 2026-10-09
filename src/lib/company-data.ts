@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { ilikePattern, type CompanySort, type ReviewSort } from "./companies";
 
@@ -104,7 +105,8 @@ export async function listCompanies({
   return { companies: (data ?? []) as CompanyStats[], total: count ?? 0 };
 }
 
-export async function getCompany(slug: string) {
+/** Cached per request, so the tab layout and the tab page share one query. */
+export const getCompany = cache(async (slug: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("companies")
@@ -112,7 +114,7 @@ export async function getCompany(slug: string) {
     .eq("slug", slug)
     .maybeSingle();
   return data as Company | null;
-}
+});
 
 export async function getCompanyStats(companyId: string) {
   const supabase = await createClient();
@@ -160,4 +162,119 @@ export async function getMyVotes(reviewIds: string[]) {
   const supabase = await createClient();
   const { data } = await supabase.from("review_helpful").select("review_id").in("review_id", reviewIds);
   return new Set((data ?? []).map((r) => r.review_id as string));
+}
+
+// ---------------------------------------------------------------- salaries and interviews
+
+export const INTERVIEWS_PER_PAGE = 10;
+
+export type SalaryGroup = {
+  role_group: string;
+  level: string;
+  report_count: number;
+  median_naira: number;
+  lowest_naira: number;
+  highest_naira: number;
+};
+
+/** Salary ranges for groups with >= 3 reports. Individual salaries are never readable. */
+export async function getSalaryStats(companyId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("company_salary_stats")
+    .select("role_group, level, report_count, median_naira, lowest_naira, highest_naira")
+    .eq("company_id", companyId)
+    .order("role_group")
+    .order("level");
+  if (error) throw new Error("Could not load salaries");
+  return (data ?? []) as SalaryGroup[];
+}
+
+export type InterviewStats = {
+  report_count: number;
+  offer_pct: number | null;
+  ghosted_pct: number | null;
+  avg_weeks: number | null;
+  avg_difficulty: number | null;
+  positive_pct: number | null;
+};
+
+export type PublicInterview = {
+  id: string;
+  role_group: string;
+  outcome: string;
+  difficulty: number;
+  process_weeks: number | null;
+  stages: string[];
+  questions_asked: string;
+  tips: string | null;
+  experience: string;
+  published_quarter: string;
+};
+
+/** Visible counts per section, for the tab labels. */
+export const getCompanyCounts = cache(async (companyId: string) => {
+  const supabase = await createClient();
+  const [reviews, salaries, interviews] = await Promise.all([
+    supabase.from("company_stats").select("review_count").eq("company_id", companyId).maybeSingle(),
+    supabase.from("company_salary_counts").select("report_count").eq("company_id", companyId).maybeSingle(),
+    supabase.from("company_interview_stats").select("report_count").eq("company_id", companyId).maybeSingle(),
+  ]);
+  return {
+    reviews: (reviews.data?.review_count as number) ?? 0,
+    salaries: (salaries.data?.report_count as number) ?? 0,
+    interviews: (interviews.data?.report_count as number) ?? 0,
+  };
+});
+
+export async function getInterviewStats(companyId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase.from("company_interview_stats").select("*").eq("company_id", companyId).maybeSingle();
+  return data as InterviewStats | null;
+}
+
+export async function getInterviews(companyId: string, page: number) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("company_interviews", {
+    p_company_id: companyId,
+    p_limit: INTERVIEWS_PER_PAGE,
+    p_offset: (page - 1) * INTERVIEWS_PER_PAGE,
+  });
+  if (error) throw new Error("Could not load interviews");
+  return (data ?? []) as PublicInterview[];
+}
+
+export type MySalary = {
+  id: string;
+  role_group: string;
+  level: string;
+  employment_type: string;
+  state: string | null;
+  monthly_gross_naira: number;
+  has_bonus: boolean;
+  other_benefits: string[];
+  status: string;
+};
+
+/** The signed-in user's own salary report (RLS: own rows only). */
+export async function getMySalary(companyId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("salary_reports")
+    .select("id, role_group, level, employment_type, state, monthly_gross_naira, has_bonus, other_benefits, status")
+    .eq("company_id", companyId)
+    .maybeSingle();
+  return data as MySalary | null;
+}
+
+export type MyInterview = Omit<PublicInterview, "published_quarter"> & { status: string };
+
+export async function getMyInterview(companyId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("interview_reports")
+    .select("id, role_group, outcome, difficulty, process_weeks, stages, questions_asked, tips, experience, status")
+    .eq("company_id", companyId)
+    .maybeSingle();
+  return data as MyInterview | null;
 }
