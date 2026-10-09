@@ -56,7 +56,8 @@ For a **hosted** project, in the Supabase dashboard:
 4. Set up custom SMTP before launch; Supabase's built-in email sender is heavily rate-limited.
 
 Database changes go in `supabase/migrations/` as migration files. Dev-only
-fictional seed data goes in `supabase/seed.sql`. Run `npm run db:reset` to apply both locally.
+fictional seed data goes in `supabase/seed.sql` (20 "Demo …" companies and a few demo reviews).
+Run `npm run db:reset` to apply both locally. The end-to-end tests expect the seed data.
 
 ## Commands
 

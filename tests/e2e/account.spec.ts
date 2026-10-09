@@ -1,34 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { confirmationLink, emailLink, fillLogin } from "./helpers";
 
 // Full account flow against a real local Supabase:
 // sign up -> confirm email (via Mailpit) -> onboarding -> /me -> log out -> log in.
 // Needs `npm run db:start` (Mailpit captures the confirmation email).
-
-const MAILPIT = process.env.MAILPIT_URL ?? "http://127.0.0.1:54324";
-
-async function emailLink(email: string, subject: string): Promise<string> {
-  const query = `to:"${email}" subject:"${subject}"`;
-  for (let i = 0; i < 30; i++) {
-    const res = await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(query)}`);
-    const { messages } = (await res.json()) as { messages: { ID: string }[] };
-    if (messages.length) {
-      const msg = (await (await fetch(`${MAILPIT}/api/v1/message/${messages[0].ID}`)).json()) as { HTML: string };
-      const href = msg.HTML.match(/href="([^"]*\/auth\/confirm[^"]*)"/)?.[1];
-      if (href) return href.replaceAll("&amp;", "&");
-    }
-    await new Promise((r) => setTimeout(r, 500));
-  }
-  throw new Error(`Email "${subject}" not received`);
-}
-
-const confirmationLink = (email: string) => emailLink(email, "Confirm your WorkEcho account");
-
-async function fillLogin(page: Page, email: string, password: string) {
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password", { exact: true }).fill(password);
-  await page.getByRole("button", { name: "Log in" }).click();
-}
 
 test("sign up, onboard, view /me, log out and log back in", async ({ page }) => {
   test.setTimeout(90_000);

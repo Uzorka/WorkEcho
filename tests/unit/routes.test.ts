@@ -30,6 +30,13 @@ describe("routeDecision", () => {
     for (const p of ["/", "/me", "/reset-password", "/companies"]) expect(routeDecision({ pathname: p, ...done })).toBeNull();
   });
 
+  it("requires login to write a review, but not to read a company", () => {
+    expect(routeDecision({ pathname: "/companies/demo-co/review", ...out })).toBe("/login?next=%2Fcompanies%2Fdemo-co%2Freview");
+    expect(routeDecision({ pathname: "/companies/demo-co", ...out })).toBeNull();
+    expect(routeDecision({ pathname: "/companies", search: "?q=review", ...out })).toBeNull();
+    expect(routeDecision({ pathname: "/companies/demo-co/review", ...done })).toBeNull();
+  });
+
   it("doesn't treat look-alike paths as protected", () => {
     expect(routeDecision({ pathname: "/meetups", ...out })).toBeNull();
   });
