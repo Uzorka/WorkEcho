@@ -5,7 +5,20 @@ import { usePathname } from "next/navigation";
 import { NAV_ITEMS, isActive } from "./nav-items";
 import { ThemeToggle } from "./ThemeToggle";
 
-export function Sidebar() {
+function UnreadBadge({ count, className = "" }: { count: number; className?: string }) {
+  if (count <= 0) return null;
+  return (
+    <span aria-hidden className={`inline-flex min-w-5 items-center justify-center rounded-full bg-danger px-1.5 text-xs font-bold text-white ${className}`}>
+      {count > 9 ? "9+" : count}
+    </span>
+  );
+}
+
+function linkLabel(label: string, href: string, unread: number) {
+  return href === "/alerts" && unread > 0 ? `${label}, ${unread} unread` : undefined;
+}
+
+export function Sidebar({ unread = 0 }: { unread?: number }) {
   const pathname = usePathname();
   return (
     <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-border bg-card px-3 py-5 md:flex">
@@ -20,6 +33,7 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
+              aria-label={linkLabel(item.label, item.href, unread)}
               className={`flex min-h-11 items-center gap-3 rounded-xl px-3 font-medium transition-colors ${
                 item.primary
                   ? "mt-2 mb-2 bg-primary text-on-primary hover:bg-primary-hover"
@@ -30,6 +44,7 @@ export function Sidebar() {
             >
               {item.icon}
               {item.label}
+              {item.href === "/alerts" && <UnreadBadge count={unread} className="ml-auto" />}
             </Link>
           );
         })}
@@ -46,7 +61,7 @@ export function Sidebar() {
   );
 }
 
-export function BottomNav() {
+export function BottomNav({ unread = 0 }: { unread?: number }) {
   const pathname = usePathname();
   return (
     <nav
@@ -61,7 +76,8 @@ export function BottomNav() {
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-xs font-medium ${
+                aria-label={linkLabel(item.label, item.href, unread)}
+                className={`relative flex min-h-14 flex-col items-center justify-center gap-0.5 text-xs font-medium ${
                   active ? "text-primary" : "text-muted"
                 }`}
               >
@@ -73,6 +89,7 @@ export function BottomNav() {
                   item.icon
                 )}
                 <span>{item.label}</span>
+                {item.href === "/alerts" && <UnreadBadge count={unread} className="absolute top-1.5 left-1/2 ml-1.5" />}
               </Link>
             </li>
           );

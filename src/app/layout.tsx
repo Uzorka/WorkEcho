@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { BottomNav, MobileHeader, Sidebar } from "@/components/AppNav";
+import { getUser } from "@/lib/auth";
+import { getUnreadCount } from "@/lib/feed-data";
 import { themeInitScript } from "@/lib/theme";
 import "./globals.css";
 
@@ -21,7 +23,9 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // Unread alerts for the nav badge (0 when logged out).
+  const unread = (await getUser()) ? await getUnreadCount() : 0;
   return (
     <html lang="en-NG" suppressHydrationWarning>
       <head>
@@ -35,7 +39,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           Skip to content
         </a>
         <div className="flex min-h-dvh">
-          <Sidebar />
+          <Sidebar unread={unread} />
           <div className="flex min-w-0 flex-1 flex-col">
             <MobileHeader />
             <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-4 pt-6 pb-24 md:px-8 md:pb-10">
@@ -43,7 +47,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </main>
           </div>
         </div>
-        <BottomNav />
+        <BottomNav unread={unread} />
       </body>
     </html>
   );

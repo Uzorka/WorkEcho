@@ -1,14 +1,27 @@
 import type { Metadata } from "next";
-import { Placeholder } from "@/components/Placeholder";
+import Link from "next/link";
+import { AuthCard } from "@/components/AuthCard";
+import { SignupForm } from "./SignupForm";
 
 export const metadata: Metadata = { title: "Sign up" };
 
 export default function SignupPage() {
   return (
-    <Placeholder
+    <AuthCard
       title="Create an account"
-      intro="Sign up with a personal email, not your work email. You'll get a generated pseudonym — no photos, no phone number."
-      comingIn="Slice 1 (accounts)"
-    />
+      intro="You'll get a generated pseudonym. No real name, no photo, no phone number."
+    >
+      <p className="rounded-xl border border-primary/30 bg-primary-soft p-3 text-sm font-medium">
+        Use a personal email, not your work email. Your employer may be able to see emails sent to
+        your work address.
+      </p>
+      <SignupForm />
+      <p className="text-sm text-muted">
+        Already have an account?{" "}
+        <Link href="/login" className="font-medium text-primary underline">
+          Log in
+        </Link>
+      </p>
+    </AuthCard>
   );
 }
