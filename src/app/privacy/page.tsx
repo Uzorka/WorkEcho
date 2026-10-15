@@ -90,8 +90,17 @@ export default function PrivacyPage() {
           Content you published: it stays up after you delete your account, but is no longer linked to you. Posts and replies then show &ldquo;Deleted
           user&rdquo;. You can delete any item yourself before deleting your account.
         </li>
-        <li>Reports and moderation records: kept while needed to handle disputes and repeat abuse. (Exact period to be confirmed before launch.)</li>
-        <li>Posting-limit timestamps: kept only to enforce limits. (Exact period to be confirmed before launch.)</li>
+        <li>
+          Reports you send: the report is kept, but 12 months after it is closed it is no longer linked to your account. The same goes for company
+          requests 12 months after they are handled.
+        </li>
+        <li>Moderation decisions (what was hidden or removed, and why): kept to handle disputes and repeat abuse.</li>
+        <li>Alerts: read alerts are deleted after 90 days, and all alerts after 1 year.</li>
+        <li>Posting-limit timestamps: deleted after 2 days.</li>
+        <li>
+          Work-email verification: we never store the email address. The one-time code is stored only as a scrambled hash and deleted after 7 days.
+          The record that you are verified at a company is kept until you delete your account, and it expires after 12 months unless you renew it.
+        </li>
         <li>Server logs: kept by our hosting providers for a short period under their own policies.</li>
       </ul>
 

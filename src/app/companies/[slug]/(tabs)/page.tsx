@@ -30,7 +30,12 @@ type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const company = await getCompany((await params).slug);
-  return { title: company ? `${company.name}: reviews, salaries and interviews` : "Company not found" };
+  if (!company) return { title: "Company not found" };
+  return {
+    title: `${company.name}: reviews, salaries and interviews`,
+    description: `What it's like to work at ${company.name}: anonymous reviews, monthly salaries in Naira and interview experiences from Nigerian workers.`,
+    alternates: { canonical: `/companies/${company.slug}` },
+  };
 }
 
 export default async function CompanyOverviewPage({ params }: Props) {

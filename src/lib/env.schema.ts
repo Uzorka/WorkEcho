@@ -22,6 +22,9 @@ export const serverEnvSchema = z.object({
   EMAIL_FROM_ADDRESS: z.email().optional(),
   // Local development only: send through Supabase's Mailpit inbox instead.
   MAILPIT_URL: z.url().optional(),
+  // Daily clean-up job (Slice 7). Vercel Cron sends it as a Bearer token.
+  // Without it the /api/cron/maintenance endpoint refuses every request.
+  CRON_SECRET: z.string().min(16, { message: "CRON_SECRET must be at least 16 characters" }).optional(),
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;

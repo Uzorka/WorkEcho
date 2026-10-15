@@ -77,6 +77,16 @@ where id = (select id from auth.users where email = 'you@example.com');
 
 The account must have finished onboarding (so it has a profile). Admins then see "Open the admin area" on /me.
 
+## Daily clean-up (retention)
+
+`vercel.json` schedules a Vercel Cron job that calls `/api/cron/maintenance` once a day.
+It runs `run_maintenance()` in the database, which deletes or unlinks data past its retention
+period (see the privacy page). Set `CRON_SECRET` in Vercel; without it the endpoint refuses
+every request. To run it locally:
+`curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/maintenance`.
+
+Going live? Follow [LAUNCH.md](LAUNCH.md).
+
 ## Commands
 
 | Command | What it does |

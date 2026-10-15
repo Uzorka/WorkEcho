@@ -1,18 +1,29 @@
 import type { Metadata, Viewport } from "next";
 import { BottomNav, MobileHeader, Sidebar } from "@/components/AppNav";
 import { getUser } from "@/lib/auth";
+import { publicEnv } from "@/lib/env";
 import { getUnreadCount } from "@/lib/feed-data";
 import { themeInitScript } from "@/lib/theme";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: {
-    default: "WorkEcho — honest reviews of Nigerian workplaces",
-    template: "%s — WorkEcho",
-  },
-  description:
-    "Learn what a Nigerian company is really like — pay, interviews and culture — from people who worked there.",
-};
+const DESCRIPTION =
+  "Learn what a Nigerian company is really like — pay, interviews and culture — from people who worked there.";
+
+export function generateMetadata(): Metadata {
+  return {
+    metadataBase: new URL(publicEnv().NEXT_PUBLIC_SITE_URL),
+    title: {
+      default: "WorkEcho — honest reviews of Nigerian workplaces",
+      template: "%s — WorkEcho",
+    },
+    description: DESCRIPTION,
+    applicationName: "WorkEcho",
+    openGraph: { type: "website", siteName: "WorkEcho", locale: "en_NG", description: DESCRIPTION },
+    twitter: { card: "summary" },
+    // Keep phone numbers in text from turning into tap-to-call links.
+    formatDetection: { telephone: false, email: false, address: false },
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",

@@ -51,16 +51,21 @@ export async function signUpAndOnboard(page: Page) {
   return creds;
 }
 
-/** Service-role client for test setup only (reads .env.local; never used by the app). */
-export async function serviceClient() {
+/** Variables from .env.local (test setup only). */
+export async function localEnv(): Promise<Record<string, string>> {
   const { readFileSync } = await import("node:fs");
-  const { createClient } = await import("@supabase/supabase-js");
-  const env = Object.fromEntries(
+  return Object.fromEntries(
     readFileSync(".env.local", "utf8")
       .split("\n")
       .filter((l) => l.includes("=") && !l.startsWith("#"))
       .map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1).trim()]),
   );
+}
+
+/** Service-role client for test setup only (reads .env.local; never used by the app). */
+export async function serviceClient() {
+  const { createClient } = await import("@supabase/supabase-js");
+  const env = await localEnv();
   return createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 }
 

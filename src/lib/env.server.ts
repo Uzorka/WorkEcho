@@ -11,6 +11,7 @@ export function serverEnv(): ServerEnv {
     RESEND_API_KEY: process.env.RESEND_API_KEY || undefined,
     EMAIL_FROM_ADDRESS: process.env.EMAIL_FROM_ADDRESS || undefined,
     MAILPIT_URL: process.env.MAILPIT_URL || undefined,
+    CRON_SECRET: process.env.CRON_SECRET || undefined,
   });
   if (!parsed.success) throw new Error(formatEnvError(parsed.error));
   cached = parsed.data;

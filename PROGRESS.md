@@ -20,7 +20,9 @@
 - [x] **Slice 6 — Verified checkmark**: work-email verification (code via Resend, email never stored),
       private verifications, checkmark on profile/posts/replies, verified reviews/reports, weighted
       ratings, verified-first lists, feed boost, double rate limits, admin revoke only, /verification.
-- [ ] Slice 7 — Polish, audit and launch
+- [x] **Slice 7 — Polish, audit and launch**: automated privacy/security audit of every table,
+      view and function; daily data clean-up (retention) via Vercel Cron; security headers; robots,
+      sitemap and share metadata; 360px + accessibility checks on every public page; LAUNCH.md.
 
 ## Slice 0 notes
 
@@ -206,3 +208,48 @@
   company's work-email domains (Admin → Companies) before anyone can verify there.
 - Checks: lint, typecheck, build, unit tests (69), DB permission tests (145) and Playwright
   (66 tests at 360px mobile and desktop, two full runs) all pass.
+
+## Slice 7 notes
+
+- **Privacy audit** (`tests/db/audit.test.ts`): reads the Postgres catalog, so it covers every
+  table, view and function, including future ones. It checks that:
+  - RLS is on everywhere.
+  - Anonymous visitors can read only `companies` directly and can write nothing.
+  - Signed-in users can never select an author/user/reporter/requester/admin id, an email, a
+    code hash or `publish_at`.
+  - Public views expose no linking columns and are all security barriers.
+  - `public_profiles` is just pseudonym + checkmark.
+  - Reviews, salaries and interviews show no pseudonym or exact date.
+  - Every SECURITY DEFINER function pins its `search_path`.
+  - Server-only functions can't be called by anon or signed-in users.
+  - Only `confirm_company_verification` can grant a checkmark (rule 10).
+- **Retention** (`supabase/migrations/20261015120000_maintenance.sql`): `run_maintenance()` is
+  service-role only. It deletes posting-limit timestamps after 2 days, verification codes after
+  7 days, and read alerts after 90 days (all alerts after 1 year). It unlinks reporters from closed
+  reports, and requesters from handled company requests, after 12 months. It also marks expired
+  verifications. Vercel Cron calls `/api/cron/maintenance` daily with `CRON_SECRET`; with no
+  secret set, the endpoint refuses everything. It returns counts only. The privacy page now states
+  these periods instead of "to be confirmed".
+- **Security headers** (`next.config.ts`): CSP (`connect-src 'self'`, since the browser never talks
+  to Supabase directly), `frame-ancestors 'none'`, nosniff, `Referrer-Policy: same-origin` (other
+  sites can't see which company page someone came from), Permissions-Policy and HSTS. The
+  `X-Powered-By` header is gone. The unused browser Supabase client was deleted.
+- **SEO**: `robots.txt` keeps private and form pages out of search, and preview deployments are
+  fully hidden. `sitemap.xml` lists public pages plus every active company, read with the anon key.
+  Site-wide Open Graph defaults, a canonical URL and a description on company pages, and no
+  auto-linking of phone numbers.
+- **Launch checks** (`tests/e2e/launch.spec.ts`): every public page, at 360px and on desktop, is
+  checked for:
+  - no sideways scroll, one h1, `lang="en-NG"`;
+  - labelled fields, named buttons and links, buttons at least 44px tall;
+  - no demo account ids or personal emails in the HTML.
+
+  Also checked: the 404 page, headers, robots, the sitemap, and the cron endpoint with and without
+  the secret.
+- Client JS: 103 kB shared, 103–115 kB first load per page.
+- **For launch:** follow LAUNCH.md (DB files, merge, `CRON_SECRET`, Resend, SMTP, mailboxes, domain,
+  legal review).
+- **Still open, not code:** real privacy@/takedown@ mailboxes, legal review, custom SMTP for
+  Supabase Auth, backups.
+- Checks: lint, typecheck, build, unit tests (75), DB tests (173) and Playwright (110 tests at 360px
+  mobile and desktop) all pass.
